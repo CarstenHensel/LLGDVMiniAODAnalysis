@@ -155,11 +155,20 @@ class MiniAODAnalysis2 : public edm::EDAnalyzer {
       std::vector<double> *vertex_z = new std::vector<double>;
       std::vector<double> *vertex_nTracks = new std::vector<double>;
       std::vector<double> *vertex_pt = new std::vector<double>;
+      std::vector<double> *vertex_ndof = new std::vector<double>;
+      std::vector<double> *vertex_d0 = new std::vector<double>;
+      std::vector<double> *vertex_dx = new std::vector<double>;
+      std::vector<double> *vertex_dy = new std::vector<double>;
+      std::vector<double> *vertex_dz = new std::vector<double>;
+
 
       // the secondary vertices
       std::vector<double> *secVertex_x = new std::vector<double>;
       std::vector<double> *secVertex_y = new std::vector<double>;
       std::vector<double> *secVertex_z = new std::vector<double>;
+      std::vector<double> *secVertex_dx = new std::vector<double>;
+      std::vector<double> *secVertex_dy = new std::vector<double>;
+      std::vector<double> *secVertex_dz = new std::vector<double>;
 
 
       // event metadata
@@ -289,14 +298,24 @@ MiniAODAnalysis2::MiniAODAnalysis2(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoElectron_iso", &electron_iso );
    tOutput -> Branch("TriggerBits", &triggerBits );
    tOutput -> Branch("TriggerNames", &triggerNames );
+   
    tOutput -> Branch("RecoVertex_x", &vertex_x );
    tOutput -> Branch("RecoVertex_y", &vertex_y );
    tOutput -> Branch("RecoVertex_z", &vertex_z );
+   tOutput -> Branch("RecoVertex_ndof", &vertex_ndof ); 
+   tOutput -> Branch("RecoVertex_d0", &vertex_d0 );
+   tOutput -> Branch("RecoVertex_xError", &vertex_dx );
+   tOutput -> Branch("RecoVertex_yError", &vertex_dy );
+   tOutput -> Branch("RecoVertex_zError", &vertex_dz );
+   tOutput -> Branch("RecoVertex_nTracks", &vertex_nTracks );
+   tOutput -> Branch("RecoVertex_pt", &vertex_pt );
+   
    tOutput -> Branch("RecoSecVertex_x", &secVertex_x );
    tOutput -> Branch("RecoSecVertex_y", &secVertex_y );
    tOutput -> Branch("RecoSecVertex_z", &secVertex_z );
-   tOutput -> Branch("RecoVertex_nTracks", &vertex_nTracks );
-   tOutput -> Branch("RecoVertex_pt", &vertex_pt );
+   tOutput -> Branch("RecoSecVertex_xError", &secVertex_x );
+   tOutput -> Branch("RecoSecVertex_yError", &secVertex_y );
+   tOutput -> Branch("RecoSecVertex_zError", &secVertex_z );
    tOutput -> Branch("MET", &met );
    tOutput -> Branch("MET_x", &met_x );
    tOutput -> Branch("MET_y", &met_y );
@@ -372,11 +391,20 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    vertex_x -> clear();
    vertex_y -> clear();
    vertex_z -> clear();
+   vertex_ndof -> clear();
+   vertex_d0 -> clear();
+   vertex_dx -> clear();
+   vertex_dy -> clear();
+   vertex_dz -> clear();
+   vertex_nTracks -> clear();
+   vertex_pt -> clear();
    secVertex_x -> clear();
    secVertex_y -> clear();
    secVertex_z -> clear();
-   vertex_nTracks -> clear();
-   vertex_pt -> clear();
+   secVertex_dx -> clear();
+   secVertex_dy -> clear();
+   secVertex_dz -> clear();
+   
    for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
      jet_btagInfo->at(iBtagAlgo)->clear();
    }
@@ -702,6 +730,11 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       vertex_x -> push_back( v.x() );
       vertex_y -> push_back( v.y() );
       vertex_z -> push_back( v.z() );
+      vertex_dx -> push_back( v.xError() );
+      vertex_dy -> push_back( v.yError() );
+      vertex_dz -> push_back( v.zError() );
+      vertex_ndof -> push_back( v.ndof() );
+      vertex_d0 -> push_back( v.position().rho() );
       vertex_nTracks -> push_back( v.nTracks() );
       vertex_pt -> push_back( v.p4().pt() );
    }
@@ -711,6 +744,9 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       secVertex_x -> push_back( v.vx() );
       secVertex_y -> push_back( v.vy() );
       secVertex_z -> push_back( v.vz() );
+      secVertex_dx -> push_back( v.vertexCovariance(0,0) );
+      secVertex_dy -> push_back( v.vertexCovariance(1,1) );
+      secVertex_dz -> push_back( v.vertexCovariance(2,2) );
    }
 
    // and fill the met
