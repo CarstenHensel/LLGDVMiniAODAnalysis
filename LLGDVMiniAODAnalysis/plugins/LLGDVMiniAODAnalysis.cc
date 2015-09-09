@@ -244,7 +244,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
     * triggerNames->push_back( "HLT_JetE70_NoBPTX3BX_NoHalo_v1" );
    */
    
-   triggerNames->push_back( "HLT_PFMET170_NoiseCleaned_v1" );
+   triggerNames->push_back("HLT_PFMET170_NoiseCleaned_v1" );
    triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_v1");
    triggerNames->push_back("HLT_Ele32_eta2p1_WP85_Gsf_v1");
    triggerNames->push_back("HLT_Ele22_eta2p1_WP85_Gsf_LooseIsoPFTau20_v1");
@@ -321,6 +321,11 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoElectron_eta", &electron_eta );
    tOutput -> Branch("RecoElectron_phi", &electron_phi );
    tOutput -> Branch("RecoElectron_iso", &electron_iso );
+   tOutput -> Branch("RecoElectron_isVeto", &electron_isVeto );
+   tOutput -> Branch("RecoElectron_isLoose", &electron_isLoose );
+   tOutput -> Branch("RecoElectron_isMedium", &electron_isMedium );
+   tOutput -> Branch("RecoElectron_isTight", &electron_isTight );
+   tOutput -> Branch("RecoElectron_isHEEP", &electron_isHEEP );
    tOutput -> Branch("TriggerBits", &triggerBits );
    tOutput -> Branch("TriggerNames", &triggerNames );
    tOutput -> Branch("METFilterBits", &METFilterBits );
@@ -494,7 +499,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    for(unsigned int i = 0; i < evMETFilterBits->size(); ++i ) {
     if(    filterNames.triggerName(i) == "Flag_HBHENoiseFilter" 
         || filterNames.triggerName(i) == "Flag_CSCTightHaloFilter"
-        || filterNames.triggerName(i) == "Flag_goodVertices"
+        //|| filterNames.triggerName(i) == "Flag_goodVertices"
         || filterNames.triggerName(i) == "Flag_eeBadScFilter" ) {
           if( !evMETFilterBits->accept(i) ) passETMissFilter = false;    
         }
@@ -504,6 +509,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
+   //for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
+   // std::cout << "got trigger " << names.triggerName(i) << std::endl;
+   //}
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
         if( names.triggerName(i) == triggerNames->at(j) ) {
