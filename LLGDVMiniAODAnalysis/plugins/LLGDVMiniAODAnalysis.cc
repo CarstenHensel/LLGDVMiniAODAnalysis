@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    MiniAODAnalysis2/MiniAODAnalysis2
-// Class:      MiniAODAnalysis2
+// Package:    LLGDVMiniAODAnalysis/LLGDVMiniAODAnalysis
+// Class:      LLGDVMiniAODAnalysis
 // 
-/**\class MiniAODAnalysis2 MiniAODAnalysis2.cc MiniAODAnalysis2/MiniAODAnalysis2/plugins/MiniAODAnalysis2.cc
+/**\class LLGDVMiniAODAnalysis LLGDVMiniAODAnalysis.cc LLGDVMiniAODAnalysis/LLGDVMiniAODAnalysis/plugins/LLGDVMiniAODAnalysis.cc
 
  Description: 
  Simple analysis class to dump output in a plain rootfile
@@ -39,8 +39,13 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidateFwd.h"
+#include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
+#include "DataFormats/EgammaCandidates/interface/Conversion.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
@@ -49,6 +54,7 @@
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/Common/interface/ValueMap.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -57,13 +63,12 @@
 // class declaration
 //
 
-class MiniAODAnalysis2 : public edm::EDAnalyzer {
+class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
    public:
-      explicit MiniAODAnalysis2(const edm::ParameterSet&);
-      ~MiniAODAnalysis2();
+      explicit LLGDVMiniAODAnalysis(const edm::ParameterSet&);
+      ~LLGDVMiniAODAnalysis();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
 
    private:
       virtual void beginJob() override;
@@ -75,13 +80,19 @@ class MiniAODAnalysis2 : public edm::EDAnalyzer {
       edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
       edm::EDGetTokenT<reco::VertexCompositePtrCandidateCollection> secVtxToken_;
       edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
+      edm::EDGetTokenT<edm::TriggerResults> METFilterBits_;
       edm::EDGetTokenT<reco::GenJetCollection> genJetToken_;
       edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenToken_;
       edm::EDGetTokenT<edm::View<pat::PackedGenParticle> > packedGenToken_;
       edm::EDGetTokenT<pat::PackedCandidateCollection> pfToken_;
       edm::EDGetTokenT<pat::MuonCollection> muonToken_;
-      edm::EDGetTokenT<pat::ElectronCollection> electronToken_;
-
+      edm::EDGetToken electronToken_;
+      edm::EDGetTokenT<reco::ConversionCollection> conversionsToken_;
+      edm::EDGetTokenT<edm::ValueMap<bool> > eleVetoIdMapToken_;
+      edm::EDGetTokenT<edm::ValueMap<bool> > eleLooseIdMapToken_;
+      edm::EDGetTokenT<edm::ValueMap<bool> > eleMediumIdMapToken_;
+      edm::EDGetTokenT<edm::ValueMap<bool> > eleTightIdMapToken_;
+      edm::EDGetTokenT<edm::ValueMap<bool> > eleHEEPIdMapToken_;
 
       // the b-tagging algorithms for which we want the numbers
       std::vector<std::string> btagAlgorithms;
@@ -126,10 +137,17 @@ class MiniAODAnalysis2 : public edm::EDAnalyzer {
       std::vector<double> *electron_eta = new std::vector<double>;
       std::vector<double> *electron_phi = new std::vector<double>;
       std::vector<double> *electron_iso = new std::vector<double>;
+      std::vector<bool> *electron_isVeto = new std::vector<bool>;
+      std::vector<bool> *electron_isLoose = new std::vector<bool>;
+      std::vector<bool> *electron_isMedium = new std::vector<bool>;
+      std::vector<bool> *electron_isTight = new std::vector<bool>;
+      std::vector<bool> *electron_isHEEP = new std::vector<bool>;
 
       // the trigger bits and names
       std::vector<int> *triggerBits = new std::vector<int>;
       std::vector<std::string> *triggerNames = new std::vector<std::string>;
+      std::vector<int> *METFilterBits = new std::vector<int>;
+      std::vector<std::string> *METFilterNames = new std::vector<std::string>;
 
       // the jet constituents 
       std::vector<std::vector<double> >* jet_constVertex_x = new std::vector<std::vector<double> >;
@@ -195,18 +213,25 @@ class MiniAODAnalysis2 : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-MiniAODAnalysis2::MiniAODAnalysis2(const edm::ParameterSet& iConfig):
+LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
   jetToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   secVtxToken_(consumes<reco::VertexCompositePtrCandidateCollection>(iConfig.getParameter<edm::InputTag>("secVertices"))),
   triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
+  METFilterBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("METFilters"))),
   genJetToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))),
   prunedGenToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("pruned"))),
   packedGenToken_(consumes<edm::View<pat::PackedGenParticle> >(iConfig.getParameter<edm::InputTag>("packed"))),
   pfToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCands"))),
   muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
-  electronToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons")))
+  electronToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))), 
+  conversionsToken_(consumes<reco::ConversionCollection > (iConfig.getParameter<edm::InputTag>("conversions"))),
+  eleVetoIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleVetoIdMap"))),
+  eleLooseIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleLooseIdMap"))),
+  eleMediumIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleMediumIdMap"))),
+  eleTightIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleTightIdMap"))),
+  eleHEEPIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleHEEPIdMap")))
   {
    //now do what ever initialization is needed
    
@@ -298,6 +323,8 @@ MiniAODAnalysis2::MiniAODAnalysis2(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoElectron_iso", &electron_iso );
    tOutput -> Branch("TriggerBits", &triggerBits );
    tOutput -> Branch("TriggerNames", &triggerNames );
+   tOutput -> Branch("METFilterBits", &METFilterBits );
+   tOutput -> Branch("METFilterNames", &METFilterNames );
    
    tOutput -> Branch("RecoVertex_x", &vertex_x );
    tOutput -> Branch("RecoVertex_y", &vertex_y );
@@ -329,7 +356,7 @@ MiniAODAnalysis2::MiniAODAnalysis2(const edm::ParameterSet& iConfig):
 }
 
 
-MiniAODAnalysis2::~MiniAODAnalysis2()
+LLGDVMiniAODAnalysis::~LLGDVMiniAODAnalysis()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -344,7 +371,7 @@ MiniAODAnalysis2::~MiniAODAnalysis2()
 
 // ------------ method called for each event  ------------
 void
-MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
   
@@ -368,7 +395,13 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    electron_eta->clear();
    electron_phi->clear();
    electron_iso->clear();
+   electron_isVeto->clear();
+   electron_isLoose->clear(); 
+   electron_isMedium->clear();
+   electron_isTight->clear();
+   electron_isHEEP->clear();
    triggerBits->clear();
+   METFilterBits->clear();
    jet_eta->clear();
    jet_phi->clear();
    jet_pt->clear();
@@ -410,7 +443,7 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    }
 
    // get all the physics objects from the miniAOD
-   edm::Handle<pat::ElectronCollection> electrons;
+   edm::Handle<edm::View<reco::GsfElectron> > electrons;
    iEvent.getByToken(electronToken_, electrons);
    
    edm::Handle<pat::MuonCollection> muons;
@@ -436,6 +469,9 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
    edm::Handle<edm::TriggerResults> evTriggerBits;
    iEvent.getByToken( triggerBits_, evTriggerBits );
+   
+   edm::Handle<edm::TriggerResults> evMETFilterBits;
+   iEvent.getByToken( METFilterBits_, evMETFilterBits );
   
    Handle<reco::GenJetCollection> genJets;
    iEvent.getByToken( genJetToken_, genJets );
@@ -452,7 +488,20 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    LuminosityBlock = id.luminosityBlock();
 
 
-    
+   
+   const edm::TriggerNames &filterNames = iEvent.triggerNames(*evMETFilterBits);
+   bool passETMissFilter = true;
+   for(unsigned int i = 0; i < evMETFilterBits->size(); ++i ) {
+    if(    filterNames.triggerName(i) == "Flag_HBHENoiseFilter" 
+        || filterNames.triggerName(i) == "Flag_CSCTightHaloFilter"
+        || filterNames.triggerName(i) == "Flag_goodVertices"
+        || filterNames.triggerName(i) == "Flag_eeBadScFilter" ) {
+          if( !evMETFilterBits->accept(i) ) passETMissFilter = false;    
+        }
+   } 
+   if( !passETMissFilter ) return;
+
+
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
@@ -466,6 +515,31 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    }
    // store only events in the ntuple which pass the trigger
    if( !passTrigger ) return;
+ 
+   // now fill the primary vertex information
+   int firstGoodVertexIdx = -1;
+   int iVtx = 0;
+   for( const reco::Vertex &v : *vertices ) {
+      bool isFake = v.isFake();
+      if( !isFake && v.ndof() >= 4. && v.position().Rho() <= 2.0 && fabs(v.position().z()) <= 24. ) {
+        if( firstGoodVertexIdx == -1 ) firstGoodVertexIdx = iVtx;
+        vertex_x -> push_back( v.x() );
+        vertex_y -> push_back( v.y() );
+        vertex_z -> push_back( v.z() );
+        vertex_dx -> push_back( v.xError() );
+        vertex_dy -> push_back( v.yError() );
+        vertex_dz -> push_back( v.zError() );
+        vertex_ndof -> push_back( v.ndof() );
+        vertex_d0 -> push_back( v.position().rho() );
+        vertex_nTracks -> push_back( v.nTracks() );
+        vertex_pt -> push_back( v.p4().pt() );
+      }
+      iVtx ++;
+   }
+
+   if( firstGoodVertexIdx == -1 ) return;
+
+
    
    // muons
    // currently using the muon id taken from here:
@@ -491,9 +565,10 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       muon_eta->push_back( m.eta() );
       muon_iso->push_back( pfRelIso );
       muon_isLooseMuon->push_back( m.isLooseMuon() );
-      muon_isTightMuon->push_back( m.isTightMuon(vertices->at(0)) );
+      muon_isTightMuon->push_back( m.isTightMuon(vertices->at(firstGoodVertexIdx)) );
    }
-   
+  
+
    // store only events without muons
    // if( muon_px->size() > 0 ) return;
 
@@ -505,57 +580,40 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/SusyObjectExperts
    // not using a cut that constraints the electron to the PV
    // calculate the isolation according to: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD
-   for( const pat::Electron &e : *electrons ) {
-      if(e.pt() < 15. ) continue;
-      if( !(e.isEE() || e.isEB() ) ) continue;
-      if( e.isEB() && e.hadronicOverEm() >= 0.15 ) continue;
-      if( e.isEB() && (  fabs(e.deltaPhiSuperClusterTrackAtVtx()) >= 0.8 
-                      || fabs(e.deltaEtaSuperClusterTrackAtVtx()) >= 0.007
-                      || e.scSigmaIEtaIEta() >= 0.01 ) )
-      continue;
-      if( e.isEE() && ( fabs(e.deltaPhiSuperClusterTrackAtVtx()) >= 0.7 
-                      || fabs(e.deltaEtaSuperClusterTrackAtVtx()) >= 0.01
-                      || e.scSigmaIEtaIEta() >= 0.03 ) ) 
-      continue;
-       
-      double charged = 0.;
-      double neutral = 0.;
-      double pileup = 0.;
-      std::vector<reco::CandidatePtr> footprint;
-      for( unsigned int i = 0; i < e.numberOfSourceCandidatePtrs(); ++i ) {
-         footprint.push_back( e.sourceCandidatePtr(i) );
-      }
-      
-      for( unsigned int i = 0; i < pfs->size(); ++i ) {
-         const pat::PackedCandidate &pf = (*pfs)[i];
-         
-         if( deltaR( pf, e) < 0.3 ) {
-            if( std::find(footprint.begin(), footprint.end(), reco::CandidatePtr(pfs,i)) != footprint.end() ) continue;
-            if( pf.charge() == 0 ) {
-               if( pf.pt() > 0.5 ) neutral += pf.pt();
-            }
-            else if ( pf.fromPV() >= 2 ) {
-               charged += pf.pt();
-            }
-            else {
-               if( pf.pt() > 0.5 ) pileup += pf.pt();
-            }
-         }  
-      }
-      double iso = charged + std::max(0.0, neutral-0.5*pileup) / e.pt();
-      //if( iso >= 0.15 ) continue;
-    
-      electron_px->push_back( e.px() );
-      electron_py->push_back( e.pz() );
-      electron_pz->push_back( e.py() );
-      electron_phi->push_back( e.phi() );
-      electron_eta->push_back( e.eta() );
-      electron_iso->push_back( iso );
+   edm::Handle<reco::ConversionCollection> conversions;
+   iEvent.getByToken( conversionsToken_, conversions );
+
+   edm::Handle<edm::ValueMap<bool> > veto_id_decisions;
+   edm::Handle<edm::ValueMap<bool> > loose_id_decisions;
+   edm::Handle<edm::ValueMap<bool> > medium_id_decisions;
+   edm::Handle<edm::ValueMap<bool> > tight_id_decisions;
+   edm::Handle<edm::ValueMap<bool> > heep_id_decisions;
+   iEvent.getByToken( eleVetoIdMapToken_, veto_id_decisions );
+   iEvent.getByToken( eleLooseIdMapToken_, loose_id_decisions );
+   iEvent.getByToken( eleMediumIdMapToken_, medium_id_decisions );
+   iEvent.getByToken( eleTightIdMapToken_, tight_id_decisions );
+   iEvent.getByToken( eleHEEPIdMapToken_, heep_id_decisions );
+
+
+   for( size_t i = 0; i < electrons->size(); ++i ) {
+      const auto e = electrons->ptrAt(i);
+      if( e->pt() < 10 ) continue;
+
+      electron_px->push_back( e->px() );
+      electron_py->push_back( e->pz() );
+      electron_pz->push_back( e->py() );
+      electron_phi->push_back( e->superCluster()->phi() );
+      electron_eta->push_back( e->superCluster()->eta() );
+      electron_isVeto->push_back( (bool)(*veto_id_decisions)[e]);
+      electron_isLoose->push_back( (bool)(*loose_id_decisions)[e]);
+      electron_isMedium->push_back( (bool)(*medium_id_decisions)[e]);
+      electron_isTight->push_back( (bool)(*tight_id_decisions)[e]);
+      electron_isHEEP->push_back( (bool)(*heep_id_decisions)[e]);
+      //electron_iso->push_back( iso );
    }
 
    // store only events without electrons
    // if( electron_px->size() > 0 ) return;
-
 
 
    // jets
@@ -568,12 +626,11 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      if( j.neutralEmEnergyFraction() >= 0.90 ) continue;
      if( j.numberOfDaughters() <= 1 ) continue;
      if( j.muonEnergyFraction() >= 0.8 ) continue;
-     if( j.chargedEmEnergyFraction() >= 0.9 ) continue;
      
-     if( fabs(j.eta()) > 2.4 ) {
+     if( fabs(j.eta()) < 2.4 ) {
+        if( j.chargedEmEnergyFraction() >= 0.9 ) continue;
         if( j.chargedHadronEnergyFraction() <= 0. ) continue;
         if( j.chargedMultiplicity() <= 0. ) continue;
-        if( j.chargedEmEnergyFraction() >= 0.99 ) continue;
      }
      if( j.pt() < 10. ) continue;
      
@@ -723,22 +780,9 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      jet_const_pca0_y->push_back( const_pca0_y );
      jet_const_pca0_z->push_back( const_pca0_z );
    }
+ 
+
   
-  
-   // now fill the primary vertex information
-   for( const reco::Vertex &v : *vertices ) {
-      vertex_x -> push_back( v.x() );
-      vertex_y -> push_back( v.y() );
-      vertex_z -> push_back( v.z() );
-      vertex_dx -> push_back( v.xError() );
-      vertex_dy -> push_back( v.yError() );
-      vertex_dz -> push_back( v.zError() );
-      vertex_ndof -> push_back( v.ndof() );
-      vertex_d0 -> push_back( v.position().rho() );
-      vertex_nTracks -> push_back( v.nTracks() );
-      vertex_pt -> push_back( v.p4().pt() );
-   }
-   
    // now fill the secondary vertex information
    for( const reco::VertexCompositePtrCandidate &v : *secVertices ) {
       secVertex_x -> push_back( v.vx() );
@@ -748,6 +792,7 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       secVertex_dy -> push_back( v.vertexCovariance(1,1) );
       secVertex_dz -> push_back( v.vertexCovariance(2,2) );
    }
+
 
    // and fill the met
    const pat::MET &themet = mets->front();
@@ -763,13 +808,13 @@ MiniAODAnalysis2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-MiniAODAnalysis2::beginJob()
+LLGDVMiniAODAnalysis::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-MiniAODAnalysis2::endJob() 
+LLGDVMiniAODAnalysis::endJob() 
 {
 
   // save the metadata tree
@@ -785,7 +830,7 @@ MiniAODAnalysis2::endJob()
 // ------------ method called when starting to processes a run  ------------
 /*
 void 
-MiniAODAnalysis2::beginRun(edm::Run const&, edm::EventSetup const&)
+LLGDVMiniAODAnalysis::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 */
@@ -793,7 +838,7 @@ MiniAODAnalysis2::beginRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when ending the processing of a run  ------------
 /*
 void 
-MiniAODAnalysis2::endRun(edm::Run const&, edm::EventSetup const&)
+LLGDVMiniAODAnalysis::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 */
@@ -801,7 +846,7 @@ MiniAODAnalysis2::endRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
 void 
-MiniAODAnalysis2::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+LLGDVMiniAODAnalysis::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
@@ -809,14 +854,14 @@ MiniAODAnalysis2::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSe
 // ------------ method called when ending the processing of a luminosity block  ------------
 /*
 void 
-MiniAODAnalysis2::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+LLGDVMiniAODAnalysis::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-MiniAODAnalysis2::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+LLGDVMiniAODAnalysis::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -825,4 +870,4 @@ MiniAODAnalysis2::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(MiniAODAnalysis2);
+DEFINE_FWK_MODULE(LLGDVMiniAODAnalysis);
