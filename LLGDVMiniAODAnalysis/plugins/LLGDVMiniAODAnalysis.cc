@@ -184,6 +184,8 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *secVertex_x = new std::vector<double>;
       std::vector<double> *secVertex_y = new std::vector<double>;
       std::vector<double> *secVertex_z = new std::vector<double>;
+      std::vector<double> *secVertex_pt = new std::vector<double>;
+      std::vector<double> *secVertex_ndof = new std::vector<double>;
       std::vector<double> *secVertex_dx = new std::vector<double>;
       std::vector<double> *secVertex_dy = new std::vector<double>;
       std::vector<double> *secVertex_dz = new std::vector<double>;
@@ -345,9 +347,11 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoSecVertex_x", &secVertex_x );
    tOutput -> Branch("RecoSecVertex_y", &secVertex_y );
    tOutput -> Branch("RecoSecVertex_z", &secVertex_z );
-   tOutput -> Branch("RecoSecVertex_xError", &secVertex_x );
-   tOutput -> Branch("RecoSecVertex_yError", &secVertex_y );
-   tOutput -> Branch("RecoSecVertex_zError", &secVertex_z );
+   tOutput -> Branch("RecoSecVertex_ndof", &secVertex_ndof );
+   tOutput -> Branch("RecoSecVertex_pt", &secVertex_pt );
+   tOutput -> Branch("RecoSecVertex_xError", &secVertex_dx );
+   tOutput -> Branch("RecoSecVertex_yError", &secVertex_dy );
+   tOutput -> Branch("RecoSecVertex_zError", &secVertex_dz );
    tOutput -> Branch("MET", &met );
    tOutput -> Branch("MET_x", &met_x );
    tOutput -> Branch("MET_y", &met_y );
@@ -439,6 +443,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    secVertex_x -> clear();
    secVertex_y -> clear();
    secVertex_z -> clear();
+   secVertex_ndof -> clear();
+   secVertex_pt -> clear();
    secVertex_dx -> clear();
    secVertex_dy -> clear();
    secVertex_dz -> clear();
@@ -796,6 +802,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       secVertex_x -> push_back( v.vx() );
       secVertex_y -> push_back( v.vy() );
       secVertex_z -> push_back( v.vz() );
+      secVertex_ndof -> push_back( v.vertexNdof() );
+      secVertex_pt -> push_back( v.pt() );
       secVertex_dx -> push_back( v.vertexCovariance(0,0) );
       secVertex_dy -> push_back( v.vertexCovariance(1,1) );
       secVertex_dz -> push_back( v.vertexCovariance(2,2) );
