@@ -23,7 +23,7 @@ process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 
 process.GlobalTag.globaltag= 'MCRUN2_74_V9'
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -48,6 +48,7 @@ for idmod in my_id_modules:
 
 
 process.demo = cms.EDAnalyzer('LLGDVMiniAODAnalysis',
+    RunLeptonTriggers = cms.bool(False),
     bits = cms.InputTag("TriggerResults","","HLT"),
     METFilters = cms.InputTag("TriggerResults", "","PAT"),
     conversions = cms.InputTag('allConversions'),
