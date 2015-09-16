@@ -615,15 +615,15 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       if( e->pt() < 10 ) continue;
 
       electron_px->push_back( e->px() );
-      electron_py->push_back( e->pz() );
-      electron_pz->push_back( e->py() );
+      electron_py->push_back( e->py() );
+      electron_pz->push_back( e->pz() );
       electron_phi->push_back( e->superCluster()->phi() );
       electron_eta->push_back( e->superCluster()->eta() );
-      electron_isVeto->push_back( (bool)(*veto_id_decisions)[e]);
-      electron_isLoose->push_back( (bool)(*loose_id_decisions)[e]);
-      electron_isMedium->push_back( (bool)(*medium_id_decisions)[e]);
-      electron_isTight->push_back( (bool)(*tight_id_decisions)[e]);
-      electron_isHEEP->push_back( (bool)(*heep_id_decisions)[e]);
+      electron_isVeto->push_back( (*veto_id_decisions)[e]);
+      electron_isLoose->push_back( (*loose_id_decisions)[e]);
+      electron_isMedium->push_back( (*medium_id_decisions)[e]);
+      electron_isTight->push_back( (*tight_id_decisions)[e]);
+      electron_isHEEP->push_back( (*heep_id_decisions)[e]);
       //electron_iso->push_back( iso );
    }
 
