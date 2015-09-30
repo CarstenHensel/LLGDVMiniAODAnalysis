@@ -124,6 +124,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *muon_px = new std::vector<double>;
       std::vector<double> *muon_py = new std::vector<double>;
       std::vector<double> *muon_pz = new std::vector<double>;
+      std::vector<double> *muon_e = new std::vector<double>;
       std::vector<double> *muon_eta = new std::vector<double>;
       std::vector<double> *muon_phi = new std::vector<double>;
       std::vector<double> *muon_iso = new std::vector<double>;
@@ -135,6 +136,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *electron_px = new std::vector<double>;
       std::vector<double> *electron_py = new std::vector<double>;
       std::vector<double> *electron_pz = new std::vector<double>;
+      std::vector<double> *electron_e = new std::vector<double>;
       std::vector<double> *electron_eta = new std::vector<double>;
       std::vector<double> *electron_phi = new std::vector<double>;
       std::vector<double> *electron_iso = new std::vector<double>;
@@ -250,33 +252,119 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    bool RunLeptonTriggers = iConfig.getParameter<bool>("RunLeptonTriggers");
    triggerNames->push_back("HLT_PFMET170_NoiseCleaned_v1" );
    if( RunLeptonTriggers ) {
-     triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_v1");
-     triggerNames->push_back("HLT_Ele32_eta2p1_WP85_Gsf_v1");
-     triggerNames->push_back("HLT_Ele22_eta2p1_WP85_Gsf_LooseIsoPFTau20_v1");
-     triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_TriCentralPFJet40_v1");
-     triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_TriCentralPFJet60_50_35_v1");
-     triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_CentralPFJet30_BTagCSV_v1");
-     triggerNames->push_back("HLT_Ele32_eta2p1_WP85_Gsf_TriCentralPFJet40_v1");
-     triggerNames->push_back("HLT_Ele32_eta2p1_WP85_Gsf_TriCentralPFJet60_50_35_v1");
-     triggerNames->push_back("HLT_Ele32_eta2p1_WP85_Gsf_CentralPFJet30_BTagCSV_v1");
-     triggerNames->push_back("HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50_v1");
-     triggerNames->push_back("HLT_Ele23_Ele12_CaloId_TrackId_Iso_v1");
-     triggerNames->push_back("HLT_Ele17_Ele12_Ele10_CaloId_TrackId_v1");
-     triggerNames->push_back("HLT_Ele95_CaloIdVT_GsfTrkIdT_v1");
-     triggerNames->push_back("HLT_Ele20WP60_Ele8_Mass55_v1");
-     triggerNames->push_back("HLT_Ele25WP60_SC4_Mass55_v1");
-     triggerNames->push_back("HLT_Mu40_v1");
-     triggerNames->push_back("HLT_Mu17_Mu8_v1");
-     triggerNames->push_back("HLT_Mu17_TkMu8_v1");
-     triggerNames->push_back("HLT_Mu30_TkMu11_v1");
-     triggerNames->push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1");
-     triggerNames->push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1");
-     triggerNames->push_back("HLT_Mu25_TkMu0_dEta18_Onia_v1");
-     triggerNames->push_back("HLT_Mu38NoFiltersNoVtx_Photon38_CaloIdL_v1");
-     triggerNames->push_back("HLT_Mu42NoFiltersNoVtx_Photon42_CaloIdL_v1");
-     triggerNames->push_back("HLT_Mu40_eta2p1_PFJet200_PFJet50_v1");
-     triggerNames->push_back("HLT_Mu23_TrkIsoVVL_Ele12_Gsf_CaloId_TrackId_Iso_MediumWP_v1");
-     triggerNames->push_back("HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1");
+    triggerNames->push_back("HLT_Ele20WP60_Ele8_Mass55_v1");
+    triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf_v1");
+    triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf_LooseIsoPFTau20_v1");
+    triggerNames->push_back("HLT_Ele25WP60_SC4_Mass55_v1");
+    triggerNames->push_back("HLT_Ele27_WP85_Gsf_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_LooseIsoPFTau20_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_DoubleMediumIsoPFTau40_Trk1_eta2p1_Reg_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_CentralPFJet30_BTagCSV07_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet30_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet50_40_30_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_LooseIsoPFTau20_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_DoubleMediumIsoPFTau40_Trk1_eta2p1_Reg_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_CentralPFJet30_BTagCSV07_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_TriCentralPFJet30_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_TriCentralPFJet50_40_30_v1");
+    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_v1");
+    triggerNames->push_back("HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50_v1");
+    triggerNames->push_back("HLT_Ele105_CaloIdVT_GsfTrkIdT_v1");
+    triggerNames->push_back("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1");
+    triggerNames->push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1");
+    triggerNames->push_back("HLT_Ele16_Ele12_Ele8_CaloIdL_TrackIdL_v1");
+    triggerNames->push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1");
+    triggerNames->push_back("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF_v1");
+    triggerNames->push_back("HLT_Ele15_IsoVVVL_BTagtop8CSV07_PFHT400_v1");
+    triggerNames->push_back("HLT_Ele15_IsoVVVL_PFHT400_PFMET70_v1");
+    triggerNames->push_back("HLT_Ele15_IsoVVVL_PFHT600_v1");
+    triggerNames->push_back("HLT_Ele15_PFHT300_v1");
+    triggerNames->push_back("HLT_Ele8_CaloIdM_TrackIdM_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele12_CaloIdM_TrackIdM_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele18_CaloIdM_TrackIdM_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v1");
+    triggerNames->push_back("HLT_Ele33_CaloIdM_TrackIdM_PFJet30_v1");
+      triggerNames->push_back("HLT_Mu7p5_L2Mu2_Jpsi_v1");
+    triggerNames->push_back("HLT_Mu7p5_L2Mu2_Upsilon_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track2_Jpsi_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track3p5_Jpsi_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track7_Jpsi_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track2_Upsilon_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track3p5_Upsilon_v1");
+    triggerNames->push_back("HLT_Mu7p5_Track7_Upsilon_v1");
+    triggerNames->push_back("HLT_Mu16_eta2p1_CaloMET30_v1");
+    triggerNames->push_back("HLT_Mu17_Mu8_DZ_v1");
+    triggerNames->push_back("HLT_Mu17_TkMu8_DZ_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1");
+    triggerNames->push_back("HLT_Mu25_TkMu0_dEta18_Onia_v1");
+    triggerNames->push_back("HLT_Mu27_TkMu8_v1");
+    triggerNames->push_back("HLT_Mu30_TkMu11_v1");
+    triggerNames->push_back("HLT_Mu40_TkMu11_v1");
+    triggerNames->push_back("HLT_Mu40_eta2p1_PFJet200_PFJet50_v1");
+    triggerNames->push_back("HLT_Mu20_v1");
+    triggerNames->push_back("HLT_Mu24_eta2p1_v1");
+    triggerNames->push_back("HLT_Mu27_v1");
+    triggerNames->push_back("HLT_Mu50_v1");
+    triggerNames->push_back("HLT_Mu45_eta2p1_v1");
+    triggerNames->push_back("HLT_Mu38NoFiltersNoVtx_Photon38_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu42NoFiltersNoVtx_Photon42_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu28NoFiltersNoVtxDisplaced_Photon28_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu33NoFiltersNoVtxDisplaced_Photon33_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu23NoFiltersNoVtx_Photon23_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu33NoFiltersNoVtxDisplaced_DisplacedJet50_Tight_v1");
+    triggerNames->push_back("HLT_Mu33NoFiltersNoVtxDisplaced_DisplacedJet50_Loose_v1");
+    triggerNames->push_back("HLT_Mu28NoFiltersNoVtx_DisplacedJet40_Loose_v1");
+    triggerNames->push_back("HLT_Mu38NoFiltersNoVtxDisplaced_DisplacedJet60_Tight_v1");
+    triggerNames->push_back("HLT_Mu38NoFiltersNoVtxDisplaced_DisplacedJet60_Loose_v1");
+    triggerNames->push_back("HLT_Mu38NoFiltersNoVtx_DisplacedJet60_Loose_v1");
+    triggerNames->push_back("HLT_Mu28NoFiltersNoVtx_CentralCaloJet40_v1");
+    triggerNames->push_back("HLT_Mu8_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu24_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu34_TrkIsoVVL_v1");
+    triggerNames->push_back("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1");
+    triggerNames->push_back("HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v1");
+    triggerNames->push_back("HLT_Mu8_DiEle12_CaloIdL_TrackIdL_v1");
+    triggerNames->push_back("HLT_Mu12_Photon25_CaloIdL_v1");
+    triggerNames->push_back("HLT_Mu12_Photon25_CaloIdL_L1ISO_v1");
+    triggerNames->push_back("HLT_Mu12_Photon25_CaloIdL_L1OR_v1");
+    triggerNames->push_back("HLT_Mu17_Photon30_CaloIdL_L1ISO_v1");
+    triggerNames->push_back("HLT_Mu17_Photon35_CaloIdL_L1ISO_v1");
+    triggerNames->push_back("HLT_Mu3er_PFHT140_PFMET125_NoiseCleaned_v1");
+    triggerNames->push_back("HLT_Mu6_PFHT200_PFMET100_NoiseCleaned_BTagCSV07_v1");
+    triggerNames->push_back("HLT_Mu6_PFHT200_PFMET125_NoiseCleaned_v1");
+    triggerNames->push_back("HLT_Mu14er_PFMET120_NoiseCleaned_v1");
+    triggerNames->push_back("HLT_Mu17_Mu8_SameSign_v1");
+    triggerNames->push_back("HLT_Mu17_Mu8_SameSign_DPhi_v1");
+    triggerNames->push_back("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v1");
+    triggerNames->push_back("HLT_Mu10_CentralPFJet30_BTagCSV0p5PF_v1");
+    triggerNames->push_back("HLT_Mu10_TrkIsoVVL_DiPFJet40_DEta3p5_MJJ750_HTT350_PFMETNoMu60_v1");
+    triggerNames->push_back("HLT_Mu15_IsoVVVL_BTagCSV07_PFHT400_v1");
+    triggerNames->push_back("HLT_Mu15_IsoVVVL_PFHT400_PFMET70_v1");
+    triggerNames->push_back("HLT_Mu15_IsoVVVL_PFHT600_v1");
+    triggerNames->push_back("HLT_Mu15_PFHT300_v1");
+    triggerNames->push_back("HLT_Mu16_TkMu0_dEta18_Onia_v1");
+    triggerNames->push_back("HLT_Mu16_TkMu0_dEta18_Phi_v1");
+    triggerNames->push_back("HLT_Mu8_v1");
+    triggerNames->push_back("HLT_Mu17_v1");
+    triggerNames->push_back("HLT_Mu24_v1");
+    triggerNames->push_back("HLT_Mu34_v1");
+   
    }
    // the btag algorithms for which we want infos
    btagAlgorithms.push_back("pfJetBProbabilityBJetTags");
@@ -315,6 +403,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoMuon_px", &muon_px );
    tOutput -> Branch("RecoMuon_py", &muon_pz );
    tOutput -> Branch("RecoMuon_pz", &muon_py );
+   tOutput -> Branch("RecoMuon_E", &muon_e );
    tOutput -> Branch("RecoMuon_eta", &muon_eta );
    tOutput -> Branch("RecoMuon_phi", &muon_phi );
    tOutput -> Branch("RecoMuon_iso", &muon_iso);
@@ -324,6 +413,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoElectron_px", &electron_px );
    tOutput -> Branch("RecoElectron_py", &electron_pz );
    tOutput -> Branch("RecoElectron_pz", &electron_py );
+   tOutput -> Branch("RecoElectron_E", &electron_e );
    tOutput -> Branch("RecoElectron_eta", &electron_eta );
    tOutput -> Branch("RecoElectron_phi", &electron_phi );
    tOutput -> Branch("RecoElectron_iso", &electron_iso );
@@ -398,6 +488,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    muon_px->clear();
    muon_py->clear();
    muon_pz->clear();
+   muon_e->clear();
    muon_eta->clear();
    muon_phi->clear();
    muon_iso->clear();
@@ -407,6 +498,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    electron_px->clear();
    electron_py->clear();
    electron_pz->clear();
+   electron_e->clear();
    electron_eta->clear();
    electron_phi->clear();
    electron_iso->clear();
@@ -522,9 +614,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
-   //for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
-   // std::cout << "got trigger " << names.triggerName(i) << std::endl;
-   //}
+   for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
+    std::cout << "got trigger " << names.triggerName(i) << std::endl;
+   }
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
         if( names.triggerName(i) == triggerNames->at(j) ) {
@@ -582,6 +674,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       muon_px->push_back( m.px() );
       muon_py->push_back( m.pz() );
       muon_pz->push_back( m.py() );
+      muon_e->push_back( m.energy() );
       muon_phi->push_back( m.phi() );
       muon_eta->push_back( m.eta() );
       muon_iso->push_back( pfRelIso );
@@ -624,6 +717,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       electron_px->push_back( e->px() );
       electron_py->push_back( e->py() );
       electron_pz->push_back( e->pz() );
+      electron_e->push_back( e->energy() );
       electron_phi->push_back( e->superCluster()->phi() );
       electron_eta->push_back( e->superCluster()->eta() );
       electron_charge->push_back( e->charge() );
