@@ -277,11 +277,11 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
      triggerNames->push_back("HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1");
    }
    // the btag algorithms for which we want infos
-   btagAlgorithms.push_back("jetBProbabilityBJetTags");
-   btagAlgorithms.push_back("jetProbabilityBJetTags");
-   btagAlgorithms.push_back("trackCountingHighPurBJetTags");
-   btagAlgorithms.push_back("trackCountingHighEffBJetTags");
-   btagAlgorithms.push_back("combinedInclusiveSecondaryVertexV2BJetTags");
+   btagAlgorithms.push_back("pfJetBProbabilityBJetTags");
+   btagAlgorithms.push_back("pfJetProbabilityBJetTags");
+   btagAlgorithms.push_back("pfTrackCountingHighPurBJetTags");
+   btagAlgorithms.push_back("pfTrackCountingHighEffBJetTags");
+   btagAlgorithms.push_back("pfCombinedInclusiveSecondaryVertexV2BJetTags");
    for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
       jet_btagInfo->push_back( new std::vector<double> );
    }
