@@ -127,6 +127,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *muon_eta = new std::vector<double>;
       std::vector<double> *muon_phi = new std::vector<double>;
       std::vector<double> *muon_iso = new std::vector<double>;
+      std::vector<double> *muon_charge = new std::vector<double>;
       std::vector<bool> *muon_isTightMuon = new std::vector<bool>;
       std::vector<bool> *muon_isLooseMuon = new std::vector<bool>;
 
@@ -137,6 +138,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *electron_eta = new std::vector<double>;
       std::vector<double> *electron_phi = new std::vector<double>;
       std::vector<double> *electron_iso = new std::vector<double>;
+      std::vector<double> *electron_charge = new std::vector<double>;
       std::vector<bool> *electron_isVeto = new std::vector<bool>;
       std::vector<bool> *electron_isLoose = new std::vector<bool>;
       std::vector<bool> *electron_isMedium = new std::vector<bool>;
@@ -316,6 +318,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoMuon_eta", &muon_eta );
    tOutput -> Branch("RecoMuon_phi", &muon_phi );
    tOutput -> Branch("RecoMuon_iso", &muon_iso);
+   tOutput -> Branch("RecoMuon_charge", &muon_charge);
    tOutput -> Branch("RecoMuon_isTightMuon", &muon_isTightMuon );
    tOutput -> Branch("RecoMuon_isLooseMuon", &muon_isLooseMuon );
    tOutput -> Branch("RecoElectron_px", &electron_px );
@@ -324,6 +327,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoElectron_eta", &electron_eta );
    tOutput -> Branch("RecoElectron_phi", &electron_phi );
    tOutput -> Branch("RecoElectron_iso", &electron_iso );
+   tOutput -> Branch("RecoElectron_charge", &electron_charge );
    tOutput -> Branch("RecoElectron_isVeto", &electron_isVeto );
    tOutput -> Branch("RecoElectron_isLoose", &electron_isLoose );
    tOutput -> Branch("RecoElectron_isMedium", &electron_isMedium );
@@ -397,6 +401,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    muon_eta->clear();
    muon_phi->clear();
    muon_iso->clear();
+   muon_charge->clear();
    muon_isTightMuon->clear();
    muon_isLooseMuon->clear();
    electron_px->clear();
@@ -405,6 +410,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    electron_eta->clear();
    electron_phi->clear();
    electron_iso->clear();
+   electron_charge->clear();
    electron_isVeto->clear();
    electron_isLoose->clear(); 
    electron_isMedium->clear();
@@ -579,6 +585,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       muon_phi->push_back( m.phi() );
       muon_eta->push_back( m.eta() );
       muon_iso->push_back( pfRelIso );
+      muon_charge->push_back( m.charge() );
       muon_isLooseMuon->push_back( m.isLooseMuon() );
       muon_isTightMuon->push_back( m.isTightMuon(vertices->at(firstGoodVertexIdx)) );
    }
@@ -619,6 +626,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       electron_pz->push_back( e->pz() );
       electron_phi->push_back( e->superCluster()->phi() );
       electron_eta->push_back( e->superCluster()->eta() );
+      electron_charge->push_back( e->charge() );
       electron_isVeto->push_back( (*veto_id_decisions)[e]);
       electron_isLoose->push_back( (*loose_id_decisions)[e]);
       electron_isMedium->push_back( (*medium_id_decisions)[e]);
