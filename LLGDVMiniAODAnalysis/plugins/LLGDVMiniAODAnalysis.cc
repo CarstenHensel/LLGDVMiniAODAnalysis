@@ -58,6 +58,8 @@
 
 #include "TFile.h"
 #include "TTree.h"
+
+std::vector<double> CalculateVertex( std::vector<double> x, std::vector<double> y, std::vector<double> z, std::vector<double> weight, std::vector<int> charge, std::vector<double> distance, int &nConsidered, double &weightednConsidered, std::vector<double> &error );
 //
 //
 // class declaration
@@ -119,6 +121,10 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *jet_phi = new std::vector<double>;
       std::vector<double> *jet_pt = new std::vector<double>;
       std::vector<std::vector<double>* > *jet_btagInfo = new std::vector<std::vector<double>* >;
+      std::vector<double> *jet_vertex_x = new std::vector<double>;
+      std::vector<double> *jet_vertex_y = new std::vector<double>;
+      std::vector<double> *jet_vertex_z = new std::vector<double>;
+      std::vector<int> *jet_nCons = new std::vector<int>;
 
       // the muon variables
       std::vector<double> *muon_px = new std::vector<double>;
@@ -154,6 +160,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<std::string> *METFilterNames = new std::vector<std::string>;
 
       // the jet constituents 
+      /*
       std::vector<std::vector<double> >* jet_constVertex_x = new std::vector<std::vector<double> >;
       std::vector<std::vector<double> >* jet_constVertex_y = new std::vector<std::vector<double> >;
       std::vector<std::vector<double> >* jet_constVertex_z = new std::vector<std::vector<double> >;
@@ -170,6 +177,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<std::vector<double> >* jet_const_closestVertex_dxy = new std::vector<std::vector<double> >;
       std::vector<std::vector<double> >* jet_const_closestVertex_dz = new std::vector<std::vector<double> >;
       std::vector<std::vector<double> >* jet_const_closestVertex_d = new std::vector<std::vector<double> >;
+      */
 
       // the primary vertex information
       std::vector<double> *vertex_x = new std::vector<double>;
@@ -293,7 +301,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
     triggerNames->push_back("HLT_Ele18_CaloIdM_TrackIdM_PFJet30_v1");
     triggerNames->push_back("HLT_Ele23_CaloIdM_TrackIdM_PFJet30_v1");
     triggerNames->push_back("HLT_Ele33_CaloIdM_TrackIdM_PFJet30_v1");
-      triggerNames->push_back("HLT_Mu7p5_L2Mu2_Jpsi_v1");
+    triggerNames->push_back("HLT_Mu7p5_L2Mu2_Jpsi_v1");
     triggerNames->push_back("HLT_Mu7p5_L2Mu2_Upsilon_v1");
     triggerNames->push_back("HLT_Mu7p5_Track2_Jpsi_v1");
     triggerNames->push_back("HLT_Mu7p5_Track3p5_Jpsi_v1");
@@ -380,10 +388,15 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoJet_eta", &jet_eta );
    tOutput -> Branch("RecoJet_phi", &jet_phi );
    tOutput -> Branch("RecoJet_pt", &jet_pt );
+   tOutput -> Branch("RecoJet_Vertex_x", &jet_vertex_x );
+   tOutput -> Branch("RecoJet_Vertex_y", &jet_vertex_y );
+   tOutput -> Branch("RecoJet_Vertex_z", &jet_vertex_z );
+   tOutput -> Branch("RecoJet_nConsidered", &jet_nCons );
    for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
      std::string branchname = "RecoJet_btag_" + btagAlgorithms.at(iBtagAlgo);
      tOutput -> Branch( branchname.c_str(), &(jet_btagInfo->at(iBtagAlgo)) ); 
    }
+   /*
    tOutput -> Branch("RecoJet_constVertex_x", &jet_constVertex_x );
    tOutput -> Branch("RecoJet_constVertex_y", &jet_constVertex_y );
    tOutput -> Branch("RecoJet_constVertex_z", &jet_constVertex_z );
@@ -400,6 +413,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoJet_const_closestVertex_d", &jet_const_closestVertex_d );
    tOutput -> Branch("RecoJet_const_eta", &jet_const_eta );
    tOutput -> Branch("RecoJet_const_phi", &jet_const_phi );
+   */ 
    tOutput -> Branch("RecoMuon_px", &muon_px );
    tOutput -> Branch("RecoMuon_py", &muon_pz );
    tOutput -> Branch("RecoMuon_pz", &muon_py );
@@ -460,6 +474,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
 }
 
 
+
 LLGDVMiniAODAnalysis::~LLGDVMiniAODAnalysis()
 {
  
@@ -513,6 +528,11 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    jet_eta->clear();
    jet_phi->clear();
    jet_pt->clear();
+   jet_vertex_x->clear();
+   jet_vertex_y->clear();
+   jet_vertex_z->clear();
+   jet_nCons->clear();
+   /*
    jet_constVertex_x->clear();
    jet_constVertex_y->clear();
    jet_constVertex_z->clear();
@@ -529,6 +549,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    jet_const_closestVertex_dxy->clear();
    jet_const_closestVertex_dz->clear();
    jet_const_closestVertex_d->clear();
+   */
    vertex_x -> clear();
    vertex_y -> clear();
    vertex_z -> clear();
@@ -614,9 +635,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
-   for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
-    std::cout << "got trigger " << names.triggerName(i) << std::endl;
-   }
+   //for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
+   // std::cout << "got trigger " << names.triggerName(i) << std::endl;
+   //}
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
         if( names.triggerName(i) == triggerNames->at(j) ) {
@@ -713,6 +734,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    for( size_t i = 0; i < electrons->size(); ++i ) {
       const auto e = electrons->ptrAt(i);
       if( e->pt() < 10 ) continue;
+      if( ! (*veto_id_decisions)[e] ) continue;
 
       electron_px->push_back( e->px() );
       electron_py->push_back( e->py() );
@@ -873,13 +895,24 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         const_charge.push_back( dau.charge() );
      }
 
+     // now calculate the jet-vertex:
+     int nCons = 0;
+     double weightednCons = 0.;
+     std::vector<double> error(3,0.);
+     std::vector<double> position = CalculateVertex( constVert_x, constVert_y, constVert_z, const_pt, const_charge, constVert_closestVertex_d, nCons, weightednCons, error );
+
      // and fill allthe jet variables
      jet_pt->push_back( j.pt() );
      jet_eta->push_back( j.eta() );
      jet_phi->push_back( j.phi() );
      for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) { 
        jet_btagInfo->at(iBtagAlgo)->push_back( j.bDiscriminator( btagAlgorithms.at(iBtagAlgo) ) );
-     } 
+     }
+     jet_vertex_x->push_back( position.at(0) );
+     jet_vertex_y->push_back( position.at(1) );
+     jet_vertex_z->push_back( position.at(2) );
+     jet_nCons->push_back( nCons );
+     /* 
      jet_constVertex_x->push_back( constVert_x ); 
      jet_constVertex_y->push_back( constVert_y ); 
      jet_constVertex_z->push_back( constVert_z ); 
@@ -896,7 +929,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_const_pca0_x->push_back( const_pca0_x );
      jet_const_pca0_y->push_back( const_pca0_y );
      jet_const_pca0_z->push_back( const_pca0_z );
-   }
+     */ 
+  }
  
 
   
@@ -924,6 +958,51 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    tOutput->Fill(); 
 
 }
+
+std::vector<double> CalculateVertex( std::vector<double> x, std::vector<double> y, std::vector<double> z, std::vector<double> weight, std::vector<int> charge, std::vector<double> distance, int &nConsidered, double &weightednConsidered, std::vector<double> &error ) {
+
+   nConsidered = 0;
+   std::vector<double> diff_x;
+   std::vector<double> diff_y;
+   std::vector<double> diff_z;
+   std::vector<double> score;
+
+   for( unsigned int i = 0; i < x.size(); ++i ) {
+      if( charge.at(i) == 0 ) continue;
+      nConsidered += 1;
+      bool knownPoint = false;
+      int iKnown = -1;
+      for( unsigned int i2 = 0; i2 < diff_x.size(); ++i2 ) {
+        if( fabs( diff_x.at(i2) - x.at(i) ) < 1.e-10 && fabs( diff_y.at(i2) - y.at(i) ) < 1.e-10 && fabs( diff_z.at(i2) - z.at(i) ) < 1.e-10 ) {
+            knownPoint = true;
+            iKnown = i2;
+        }
+      }
+
+      if( knownPoint ) {
+        score.at(iKnown) += weight.at(i)/distance.at(i);
+      }
+      else {
+        diff_x.push_back( x.at(i) );
+        diff_y.push_back( y.at(i) );
+        diff_z.push_back( z.at(i) );
+        score.push_back( weight.at(i)/distance.at(i) );
+      }
+   }
+
+   double scoreMax = 0.;
+   std::vector<double> mean(3, -10000.);
+   for( unsigned int i = 0; i < diff_x.size(); ++i ) {
+        if ( score.at(i) > scoreMax ) {
+            scoreMax = score.at(i);
+            mean.at(0) = diff_x.at(i);
+            mean.at(1) = diff_y.at(i);
+            mean.at(2) = diff_z.at(i);
+        }
+    }
+    return mean;
+}
+
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
