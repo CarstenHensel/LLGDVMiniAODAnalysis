@@ -98,7 +98,8 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
 
       // the b-tagging algorithms for which we want the numbers
       std::vector<std::string> btagAlgorithms;
-
+    
+      bool isData = false;
 
       // the output file and tree
       TFile *fOutput = new TFile("RecoOutput.root", "RECREATE");
@@ -258,7 +259,14 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
     * triggerNames->push_back( "HLT_JetE70_NoBPTX3BX_NoHalo_v1" );
    */
    bool RunLeptonTriggers = iConfig.getParameter<bool>("RunLeptonTriggers");
-   triggerNames->push_back("HLT_PFMET170_NoiseCleaned_v1" );
+   isData = iConfig.getParameter<bool>("IsData");
+
+   if( !isData ) {
+     triggerNames->push_back("HLT_PFMET170_NoiseCleaned_v1" );
+   }
+   else {
+     triggerNames->push_back( "HLT_PFMET170_NoiseCleaned_v2" );
+   }
    if( RunLeptonTriggers ) {
     triggerNames->push_back("HLT_Ele20WP60_Ele8_Mass55_v1");
     triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf_v1");
@@ -495,7 +503,6 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    using namespace edm;
   
    nEventsProcessed += 1;
-
    // clear all variables
    met = 0.;
    met_x = 0.;
@@ -623,6 +630,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    const edm::TriggerNames &filterNames = iEvent.triggerNames(*evMETFilterBits);
    bool passETMissFilter = true;
    for(unsigned int i = 0; i < evMETFilterBits->size(); ++i ) {
+   // std::cout <<" testing met filter " << filterNames.triggerName(i) << std::endl;
     if(    filterNames.triggerName(i) == "Flag_HBHENoiseFilter" 
         || filterNames.triggerName(i) == "Flag_CSCTightHaloFilter"
         //|| filterNames.triggerName(i) == "Flag_goodVertices"
@@ -636,7 +644,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
    //for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
-   // std::cout << "got trigger " << names.triggerName(i) << std::endl;
+   //  std::cout << "got trigger " << names.triggerName(i) << std::endl;
    //}
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
