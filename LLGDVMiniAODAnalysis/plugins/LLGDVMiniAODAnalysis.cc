@@ -23,7 +23,9 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
+#include <FWCore/Framework/interface/EventSetup.h>
 #include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -59,7 +61,9 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
-#include <Alignment/SurveyAnalysis/interface/DTSurvey.h>
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -130,7 +134,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       // the jet variables
       std::vector<double> *jet_eta = new std::vector<double>;
       std::vector<double> *jet_phi = new std::vector<double>;
-      std::vector<double> *jet_pt = new std::vector<double>;
+      std::vector<std::vector<double> > *jet_pt = new std::vector<std::vector<double> >;
       std::vector<std::vector<double>* > *jet_btagInfo = new std::vector<std::vector<double>* >;
       std::vector<double> *jet_vertex_x = new std::vector<double>;
       std::vector<double> *jet_vertex_y = new std::vector<double>;
@@ -617,6 +621,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_btagInfo->at(iBtagAlgo)->clear();
    }
 
+
+   edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+   iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
+   JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
+   JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(JetCorPar);
+
    // get all the physics objects from the miniAOD
    edm::Handle<edm::View<reco::GsfElectron> > electrons;
    iEvent.getByToken(electronToken_, electrons);
@@ -1067,7 +1077,17 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      averageDistance /= chargedConsts;
 
      // and fill allthe jet variables
-     jet_pt->push_back( j.pt() );
+     std::vector<double> jpts;
+
+     jecUnc->setJetEta(j.eta() );
+     jecUnc->setJetPt(j.pt()); // here you must use the CORRECTED jet pt
+     double unc = jecUnc->getUncertainty(true);
+     
+     jpts.push_back( j.pt() );
+     jpts.push_back( j.pt()*(1.+unc));
+     jpts.push_back( j.pt()*(1.-unc));
+     
+     jet_pt->push_back( jpts );
      jet_eta->push_back( j.eta() );
      jet_phi->push_back( j.phi() );
      for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) { 
