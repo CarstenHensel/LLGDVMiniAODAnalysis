@@ -35,6 +35,7 @@
 
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -95,6 +96,8 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       edm::EDGetTokenT<edm::TriggerResults> METFilterBits_;
       edm::EDGetTokenT<reco::GenJetCollection> genJetToken_;
       edm::EDGetTokenT<pat::PackedCandidateCollection> pfToken_;
+      edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken_;
+      //edm::EDGetTokenT<LHEEventProduct> lheEventToken_;
       edm::EDGetTokenT<pat::MuonCollection> muonToken_;
       edm::EDGetToken electronToken_;
       edm::EDGetToken tauToken_;
@@ -225,6 +228,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *secVertex_z = new std::vector<double>;
       std::vector<double> *secVertex_pt = new std::vector<double>;
       std::vector<double> *secVertex_ndof = new std::vector<double>;
+      std::vector<double> *secVertex_chi2 = new std::vector<double>;
       std::vector<double> *secVertex_dx = new std::vector<double>;
       std::vector<double> *secVertex_dy = new std::vector<double>;
       std::vector<double> *secVertex_dz = new std::vector<double>;
@@ -253,10 +257,13 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
 
 
       // event metadata
-      int RunNumber = 0;
-      int EventNumber = 0;
-      int LuminosityBlock = 0;
+      unsigned int RunNumber = 0;
+      unsigned long long EventNumber = 0;
+      unsigned int LuminosityBlock = 0;
 
+      double sumOfWeights = 0.;
+      double generatorWeight = 0.;
+      std::vector<double> *generatorWeights = new std::vector<double>; 
       //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
@@ -286,6 +293,8 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   METFilterBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("METFilters"))),
   genJetToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))),
   pfToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCands"))),
+  genEvtInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("GenEventInfo") )),
+  //lheEventToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("LHEEventToken") )), 
   muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))), 
   tauToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
@@ -315,49 +324,19 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    std::string trigVersion = (isData) ? "_v2" : "_v1";
 
    triggerNames->push_back("HLT_PFMET170_NoiseCleaned" );
-   
+   triggerNames->push_back("HLT_PFMETNoMu90_JetIdCleaned_PFMHTNoMu90_IDTight" );
+   triggerNames->push_back("HLT_PFMETNoMu90_NoiseCleaned_PFMHTNoMu90_IDTight" );
+   triggerNames->push_back("HLT_PFMETNoMu90_PFMHTNoMu90_IDTight" );
+
    if( RunLeptonTriggers ) {
-    triggerNames->push_back("HLT_Ele20WP60_Ele8_Mass55");
     triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf");
-    triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf_LooseIsoPFTau20");
-    triggerNames->push_back("HLT_Ele25WP60_SC4_Mass55");
     triggerNames->push_back("HLT_Ele27_WP85_Gsf");
     triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_LooseIsoPFTau20");
-    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_DoubleMediumIsoPFTau40_Trk1_eta2p1_Reg");
-    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_CentralPFJet30_BTagCSV07");
-    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet30");
-    triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf_TriCentralPFJet50_40_30");
     triggerNames->push_back("HLT_Ele27_eta2p1_WP75_Gsf");
-    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_LooseIsoPFTau20");
-    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_DoubleMediumIsoPFTau40_Trk1_eta2p1_Reg");
-    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_CentralPFJet30_BTagCSV07");
-    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_TriCentralPFJet30");
-    triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf_TriCentralPFJet50_40_30");
     triggerNames->push_back("HLT_Ele32_eta2p1_WP75_Gsf");
-    triggerNames->push_back("HLT_Ele45_CaloIdVT_GsfTrkIdT_PFJet200_PFJet50");
     triggerNames->push_back("HLT_Ele105_CaloIdVT_GsfTrkIdT");
-    triggerNames->push_back("HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30");
-    triggerNames->push_back("HLT_Ele18_CaloIdL_TrackIdL_IsoVL_PFJet30");
-    triggerNames->push_back("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30");
-    triggerNames->push_back("HLT_Ele33_CaloIdL_TrackIdL_IsoVL_PFJet30");
-    triggerNames->push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
-    triggerNames->push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
-    triggerNames->push_back("HLT_Ele16_Ele12_Ele8_CaloIdL_TrackIdL");
-    triggerNames->push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL");
-    triggerNames->push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL");
     triggerNames->push_back("HLT_Ele23_CaloIdL_TrackIdL_IsoVL");
     triggerNames->push_back("HLT_Ele12_CaloIdL_TrackIdL_IsoVL");
-    triggerNames->push_back("HLT_Ele27_eta2p1_WP85_Gsf_HT200");
-    triggerNames->push_back("HLT_Ele10_CaloIdM_TrackIdM_CentralPFJet30_BTagCSV0p5PF");
-    triggerNames->push_back("HLT_Ele15_IsoVVVL_BTagtop8CSV07_PFHT400");
-    triggerNames->push_back("HLT_Ele15_IsoVVVL_PFHT400_PFMET70");
-    triggerNames->push_back("HLT_Ele15_IsoVVVL_PFHT600");
-    triggerNames->push_back("HLT_Ele15_PFHT300");
-    triggerNames->push_back("HLT_Ele8_CaloIdM_TrackIdM_PFJet30");
-    triggerNames->push_back("HLT_Ele12_CaloIdM_TrackIdM_PFJet30");
-    triggerNames->push_back("HLT_Ele18_CaloIdM_TrackIdM_PFJet30");
-    triggerNames->push_back("HLT_Ele23_CaloIdM_TrackIdM_PFJet30");
-    triggerNames->push_back("HLT_Ele33_CaloIdM_TrackIdM_PFJet30");
     triggerNames->push_back("HLT_Mu50");
     triggerNames->push_back("HLT_Mu45_eta2p1");
    
@@ -456,6 +435,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoSecVertex_y", &secVertex_y );
    tOutput -> Branch("RecoSecVertex_z", &secVertex_z );
    tOutput -> Branch("RecoSecVertex_ndof", &secVertex_ndof );
+   tOutput -> Branch("RecoSecVertex_chi2", &secVertex_chi2 );
    tOutput -> Branch("RecoSecVertex_pt", &secVertex_pt );
    tOutput -> Branch("RecoSecVertex_xError", &secVertex_dx );
    tOutput -> Branch("RecoSecVertex_yError", &secVertex_dy );
@@ -487,9 +467,12 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("EventNumber", &EventNumber );
    tOutput -> Branch("RunNumber", &RunNumber );
    tOutput -> Branch("LuminosityBlock", &LuminosityBlock );
-  
+   tOutput -> Branch("GeneratorWeights", &generatorWeights );
+   tOutput -> Branch("GeneratorWeight", &generatorWeight );
+
    // the metadata tree
    tMetaData -> Branch("nEventsProcessed", &nEventsProcessed );
+   tMetaData -> Branch("SumOfWeights", &sumOfWeights );
    tMetaData -> Branch("nEventsAccepted", &nEventsAccepted );
 }
 
@@ -593,6 +576,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    secVertex_y -> clear();
    secVertex_z -> clear();
    secVertex_ndof -> clear();
+   secVertex_chi2 -> clear();
    secVertex_pt -> clear();
    secVertex_dx -> clear();
    secVertex_dy -> clear();
@@ -601,6 +585,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    to_pt -> clear();
    to_eta -> clear();
    to_phi -> clear();
+   generatorWeights -> clear();
+   generatorWeight = 0.;
    if( storeGenData && !isData ) {
      mct_px -> clear();
      mct_py -> clear();
@@ -626,6 +612,22 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
    JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(JetCorPar);
+
+   // get the weight:
+   edm::Handle<GenEventInfoProduct> genEvtInfo; 
+   iEvent.getByToken( genEvtInfoToken_, genEvtInfo );
+
+   generatorWeight = genEvtInfo->weight();
+   sumOfWeights += generatorWeight;
+
+   //edm::Handle<LHEEventProduct> lheEventProduct;
+   //iEvent.getByToken( lheEventToken_, lheEventProduct );
+   //std::cout << "compare " << generatorWeight << " with " << lheEventProduct->hepeup().XWGTUP << std::endl;
+
+   const std::vector<double>& evtWeights = genEvtInfo->weights();
+   for( unsigned int iWeight = 0; iWeight < evtWeights.size(); ++iWeight ) {
+     generatorWeights->push_back( evtWeights.at(iWeight ) );
+   }
 
    // get all the physics objects from the miniAOD
    edm::Handle<edm::View<reco::GsfElectron> > electrons;
@@ -707,7 +709,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
         if( names.triggerName(i).find( triggerNames->at(j) ) != std::string::npos ) {
           triggerNamesTree->push_back( names.triggerName(i) );
-          triggerBits->push_back( evTriggerBits->accept(i) ? 1 : 0 );
+          triggerBits->push_back( ( (evTriggerBits->accept(i)) ? 1 : 0) );
           if( evTriggerBits->accept(i) ) passTrigger = true;
           continue;
         }
@@ -767,7 +769,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       //std::cout << "\t   Paths (" << pathNamesAll.size()<<"/"<<pathNamesLast.size()<<"):    ";
       for (unsigned h = 0, n = pathNamesAll.size(); h < n; ++h) {
          for( unsigned int k = 0; k < to_TriggerNames->size(); ++k ) {
-           if( pathNamesAll[h] == to_TriggerNames->at(k) ) {
+           if( pathNamesAll[h].find(to_TriggerNames->at(k)) != std::string::npos ) {
               bool isBoth = obj.hasPathName( pathNamesAll[h], true, true ); 
               //bool isL3   = obj.hasPathName( pathNamesAll[h], false, true ); 
               bool isLF   = obj.hasPathName( pathNamesAll[h], true, false ); 
@@ -794,6 +796,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    
    for( const pat::Muon &m : *muons ) {
       if( !m.isPFMuon() ) continue;
+      if( !(m.isGlobalMuon() || m.isTrackerMuon()) ) continue;
       if( !m.isLooseMuon() ) continue;
       if( m.pt() < 10. ) continue;
       if( fabs(m.eta()) > 2.5 ) continue;
@@ -1128,6 +1131,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       secVertex_y -> push_back( v.vy() );
       secVertex_z -> push_back( v.vz() );
       secVertex_ndof -> push_back( v.vertexNdof() );
+      secVertex_chi2 -> push_back( v.vertexChi2() );
       secVertex_pt -> push_back( v.pt() );
       secVertex_dx -> push_back( v.vertexCovariance(0,0) );
       secVertex_dy -> push_back( v.vertexCovariance(1,1) );
@@ -1141,7 +1145,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    met->push_back( themet.corSumEt(pat::MET::METCorrectionLevel::Type01) ); 
    met_x->push_back( themet.corPx(pat::MET::METCorrectionLevel::Type01) );
    met_y->push_back( themet.corPy(pat::MET::METCorrectionLevel::Type01) );
-   for( pat::MET::METUncertainty iMETUNC = pat::MET::METUncertainty::JetResUp; iMETUNC < pat::MET::METUncertainty::METFullUncertaintySize; iMETUNC = pat::MET::METUncertainty( iMETUNC + 1) ) {
+   for( pat::MET::METUncertainty iMETUNC = pat::MET::METUncertainty::JetResUp; iMETUNC < pat::MET::METUncertainty::METUncertaintySize; iMETUNC = pat::MET::METUncertainty( iMETUNC + 1) ) {
      met->push_back( themet.shiftedSumEt( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
      met_x->push_back( themet.shiftedPx( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
      met_y->push_back( themet.shiftedPy( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
@@ -1183,6 +1187,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    }
 
 
+   delete jecUnc;
    // finally, write it to the tree
    nEventsAccepted += 1;
    tOutput->Fill(); 
