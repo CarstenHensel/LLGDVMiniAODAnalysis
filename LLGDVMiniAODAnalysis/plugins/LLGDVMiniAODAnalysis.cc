@@ -61,6 +61,7 @@
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Common/interface/ValueMap.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
@@ -97,6 +98,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       edm::EDGetTokenT<reco::GenJetCollection> genJetToken_;
       edm::EDGetTokenT<pat::PackedCandidateCollection> pfToken_;
       edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken_;
+      edm::EDGetTokenT<std::vector<PileupSummaryInfo> > PupInfoToken_;
       //edm::EDGetTokenT<LHEEventProduct> lheEventToken_;
       edm::EDGetTokenT<pat::MuonCollection> muonToken_;
       edm::EDGetToken electronToken_;
@@ -127,8 +129,13 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       int nEventsProcessed = 0;
       int nEventsAccepted = 0;
 
+
       
       // the variables used for output
+      // pileup related variables;
+      float NumberOfTrueInteractions;
+      int NumberOfObservedInteractions;
+
       // missing transverse energy
       std::vector<double> *met = new std::vector<double>;
       std::vector<double> *met_x = new std::vector<double>;
@@ -294,7 +301,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   genJetToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))),
   pfToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCands"))),
   genEvtInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("GenEventInfo") )),
-  //lheEventToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("LHEEventToken") )), 
+  PupInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pupInfo"))),
   muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))), 
   tauToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
@@ -387,6 +394,8 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoJet_const_eta", &jet_const_eta );
    tOutput -> Branch("RecoJet_const_phi", &jet_const_phi );
    */ 
+   tOutput -> Branch("PUINFO_NumberOfTrueInteractions", &NumberOfTrueInteractions );
+   tOutput -> Branch("PUINFO_NumberOfObservedInteractiosn", &NumberOfObservedInteractions );
    tOutput -> Branch("RecoMuon_px", &muon_px );
    tOutput -> Branch("RecoMuon_py", &muon_pz );
    tOutput -> Branch("RecoMuon_pz", &muon_py );
@@ -543,6 +552,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    jet_nCons->clear();
    jet_averageDistance->clear();
    jet_rmsDistance->clear();
+   NumberOfTrueInteractions = -1.;
+   NumberOfObservedInteractions = -1;
 
    /*
    jet_constVertex_x->clear();
@@ -613,21 +624,42 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(JetCorPar);
 
-   // get the weight:
-   edm::Handle<GenEventInfoProduct> genEvtInfo; 
-   iEvent.getByToken( genEvtInfoToken_, genEvtInfo );
+   // get the weight and PU info
+   if( !isData ) {
+     //generator weight:
+     edm::Handle<GenEventInfoProduct> genEvtInfo; 
+     iEvent.getByToken( genEvtInfoToken_, genEvtInfo );
 
-   generatorWeight = genEvtInfo->weight();
-   sumOfWeights += generatorWeight;
+     generatorWeight = genEvtInfo->weight();
+     sumOfWeights += generatorWeight;
+   
+     const std::vector<double>& evtWeights = genEvtInfo->weights();
+     for( unsigned int iWeight = 0; iWeight < evtWeights.size(); ++iWeight ) {
+       generatorWeights->push_back( evtWeights.at(iWeight ) );
+     }
+  
+     // pileup info:
+     Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+     iEvent.getByToken(PupInfoToken_, PupInfo);
 
+     std::vector<PileupSummaryInfo>::const_iterator PVI;
+     for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+       int BX = PVI->getBunchCrossing();
+       if(BX == 0) { 
+          NumberOfTrueInteractions = PVI->getTrueNumInteractions();
+          NumberOfObservedInteractions = PVI->getPU_NumInteractions();
+       }
+     }
+   }
+
+   else {
+     generatorWeight = 1.;
+     sumOfWeights += 1.;
+   }
    //edm::Handle<LHEEventProduct> lheEventProduct;
    //iEvent.getByToken( lheEventToken_, lheEventProduct );
    //std::cout << "compare " << generatorWeight << " with " << lheEventProduct->hepeup().XWGTUP << std::endl;
 
-   const std::vector<double>& evtWeights = genEvtInfo->weights();
-   for( unsigned int iWeight = 0; iWeight < evtWeights.size(); ++iWeight ) {
-     generatorWeights->push_back( evtWeights.at(iWeight ) );
-   }
 
    // get all the physics objects from the miniAOD
    edm::Handle<edm::View<reco::GsfElectron> > electrons;
