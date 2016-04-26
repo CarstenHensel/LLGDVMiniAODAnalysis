@@ -89,7 +89,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       virtual void endJob() override;
       edm::EDGetTokenT<pat::METCollection> metToken_;
       edm::EDGetTokenT<pat::JetCollection> jetToken_;
-      edm::EDGetTokenT<reco::PFJetCollection> jetToken2_;
+      edm::EDGetTokenT<reco::PFJetCollection> jetTokennoCHS_;
       edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
       edm::EDGetTokenT<reco::VertexCompositePtrCandidateCollection> secVtxToken_;
       edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
@@ -119,6 +119,8 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       // some flags:
       bool isData = false;
       bool storeGenData = false;
+      bool ignoreTriggers = false;
+      bool useCHSJets = true;
 
       // the output file and tree
       TFile *fOutput = new TFile("RecoOutput.root", "RECREATE");
@@ -135,6 +137,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       // pileup related variables;
       float NumberOfTrueInteractions;
       int NumberOfObservedInteractions;
+      double GenLevel_HT;;
 
       // missing transverse energy
       std::vector<double> *met = new std::vector<double>;
@@ -293,6 +296,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
 LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
   jetToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
+  jetTokennoCHS_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("jetsnochs"))),
   vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   secVtxToken_(consumes<reco::VertexCompositePtrCandidateCollection>(iConfig.getParameter<edm::InputTag>("secVertices"))),
   triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
@@ -327,6 +331,8 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    bool RunLeptonTriggers = iConfig.getParameter<bool>("RunLeptonTriggers");
    isData = iConfig.getParameter<bool>("IsData");
    storeGenData = iConfig.getParameter<bool>("StoreGenData");
+   ignoreTriggers = iConfig.getParameter<bool>("IgnoreTriggers"); 
+   useCHSJets = iConfig.getParameter<bool>("UseCHSJets");
 
    std::string trigVersion = (isData) ? "_v2" : "_v1";
 
@@ -334,6 +340,9 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    triggerNames->push_back("HLT_PFMETNoMu90_JetIdCleaned_PFMHTNoMu90_IDTight" );
    triggerNames->push_back("HLT_PFMETNoMu90_NoiseCleaned_PFMHTNoMu90_IDTight" );
    triggerNames->push_back("HLT_PFMETNoMu90_PFMHTNoMu90_IDTight" );
+   triggerNames->push_back("HLT_PFMET90_JetIdCleaned_PFMHT90_IDTight" );
+   triggerNames->push_back("HLT_PFMET90_NoiseCleaned_PFMHT90_IDTight" );
+   triggerNames->push_back("HLT_PFMET90_PFMHT90_IDTight" );
 
    if( RunLeptonTriggers ) {
     triggerNames->push_back("HLT_Ele22_eta2p1_WP75_Gsf");
@@ -396,6 +405,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    */ 
    tOutput -> Branch("PUINFO_NumberOfTrueInteractions", &NumberOfTrueInteractions );
    tOutput -> Branch("PUINFO_NumberOfObservedInteractiosn", &NumberOfObservedInteractions );
+   tOutput -> Branch("GenLevel_HT", &GenLevel_HT );
    tOutput -> Branch("RecoMuon_px", &muon_px );
    tOutput -> Branch("RecoMuon_py", &muon_pz );
    tOutput -> Branch("RecoMuon_pz", &muon_py );
@@ -554,7 +564,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    jet_rmsDistance->clear();
    NumberOfTrueInteractions = -1.;
    NumberOfObservedInteractions = -1;
-
+   GenLevel_HT = -1.;
    /*
    jet_constVertex_x->clear();
    jet_constVertex_y->clear();
@@ -662,6 +672,11 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
 
    // get all the physics objects from the miniAOD
+   Handle<reco::PFJetCollection> jetsnoCHS;
+   if( !useCHSJets ) {
+     iEvent.getByToken( jetTokennoCHS_, jetsnoCHS );
+   }
+
    edm::Handle<edm::View<reco::GsfElectron> > electrons;
    iEvent.getByToken(electronToken_, electrons);
    
@@ -700,9 +715,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    
    Handle<edm::View<reco::GenParticle> > pruned;
    Handle<edm::View<pat::PackedGenParticle> > packed;
-   if( storeGenData && !isData ) {
+   
+   if( !isData ) {
      iEvent.getByToken(prunedGenToken_, pruned);
-     iEvent.getByToken(packedGenToken_, packed);
+     if( storeGenData ) {
+       iEvent.getByToken(packedGenToken_, packed);
+     }
    }
 
 
@@ -730,7 +748,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
           if( !evMETFilterBits->accept(i) ) passETMissFilter = false;    
         }
    } 
-   if( !passETMissFilter ) return;
+   if( !passETMissFilter && !ignoreTriggers ) return;
 
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
    bool passTrigger = false;
@@ -739,6 +757,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    //}
    for( unsigned int j = 0; j < triggerNames->size(); ++j ) {
     for(unsigned int i = 0; i < evTriggerBits->size(); ++i ) {
+        //std::cout << "got trigger " << names.triggerName(i) << std::endl;
         if( names.triggerName(i).find( triggerNames->at(j) ) != std::string::npos ) {
           triggerNamesTree->push_back( names.triggerName(i) );
           triggerBits->push_back( ( (evTriggerBits->accept(i)) ? 1 : 0) );
@@ -748,7 +767,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       }
    }
    // store only events in the ntuple which pass the trigger
-   if( !passTrigger ) return;
+   if( !passTrigger && !ignoreTriggers ) return;
   
    // now fill the primary vertex information
    int firstGoodVertexIdx = -1;
@@ -772,7 +791,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    }
 
    // manual implementation of good vertex filter
-   if( firstGoodVertexIdx == -1 ) return;
+   if( firstGoodVertexIdx == -1 && !ignoreTriggers ) return;
 
    // fill the trigger objects
    //std::string trigVersion = (isData) ? "_v2" : "_v1";
@@ -912,6 +931,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // using the tight selection from:
    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID#Recommendations_for_13_TeV_data
    int ctrJet = -1;
+   if( useCHSJets ) {
    for( const pat::Jet &j : *jets ) {
      
      if( j.neutralHadronEnergyFraction() >= 0.90 ) continue;
@@ -1154,7 +1174,253 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_const_pca0_z->push_back( const_pca0_z );
      */ 
   }
- 
+  }
+   else {
+   for( const reco::Jet &jr : *jetsnoCHS ) {
+
+     const pat::Jet j( jr );
+     
+     if( j.neutralHadronEnergyFraction() >= 0.90 ) continue;
+     if( j.neutralEmEnergyFraction() >= 0.90 ) continue;
+     if( j.numberOfDaughters() <= 1 ) continue;
+     if( j.muonEnergyFraction() >= 0.8 ) continue;
+     
+     if( fabs(j.eta()) < 2.4 ) {
+        if( j.chargedEmEnergyFraction() >= 0.9 ) continue;
+        if( j.chargedHadronEnergyFraction() <= 0. ) continue;
+        if( j.chargedMultiplicity() <= 0. ) continue;
+     }
+     if( fabs(j.eta()) > 3.0 ) {
+        if( j.neutralMultiplicity() <= 10 ) continue;
+     }
+     if( j.pt() < 10. ) continue;
+     
+     ctrJet += 1;
+     
+     std::vector<double> constVert_x;
+     std::vector<double> constVert_y;
+     std::vector<double> constVert_z;
+     std::vector<double> const_pt;
+     std::vector<double> const_eta;
+     std::vector<double> const_phi;
+     std::vector<int> const_charge;
+     std::vector<double> const_px;
+     std::vector<double> const_py;
+     std::vector<double> const_pz;
+     std::vector<double> const_pca0_x;
+     std::vector<double> const_pca0_y;
+     std::vector<double> const_pca0_z;
+     std::vector<double> constVert_closestVertex_dxy;
+     std::vector<double> constVert_closestVertex_dz;
+     std::vector<double> constVert_closestVertex_d;
+     std::vector<double> average_distance( vertices->size(), 0. );
+     
+     // loop over the jet constituents to find the vertex closest to each:
+     for( unsigned int iD = 0; iD < j.numberOfDaughters(); ++iD ) {
+        
+        const pat::PackedCandidate &dau1 = dynamic_cast<const pat::PackedCandidate &>(*j.daughter(iD));
+        pat::PackedCandidate dau(dau1);
+      
+        const_px.push_back( dau.px() );
+        const_py.push_back( dau.py() );
+        const_pz.push_back( dau.pz() );
+        const_pca0_x.push_back( dau.vertex().x() );
+        const_pca0_y.push_back( dau.vertex().y() );
+        const_pca0_z.push_back( dau.vertex().z() );
+
+        // minimum distances (total, xy and z) for the jet constituent to any vertex
+        double dMin = 100000.;
+        double dxyMin = 10000.;
+        double dzMin = 10000.;
+        int ctr = -1;
+       
+        // get the unity vector pointing in the direction of the momentum and a reference point to build a self-made pseudo track
+        // the 'track' is then (x(t), y(t), z(t) ) = (x,y,z) + t*(px,py,pz);
+        // tmin, the time parameter for the point of closest approach is determined by minimising d = sqrt( (vx - x(t))^2 + (vy - y(t))^2 + (vz - z(t))^2);
+
+        double jetVertex_x = -10000.;
+        double jetVertex_y = -10000.;
+        double jetVertex_z = -10000.;
+        // first loop over the primary vertices
+        for( const reco::Vertex &v : *vertices ) {
+            ctr += 1;
+            double x = dau.vertex().x();
+            double y = dau.vertex().y();
+            double z = dau.vertex().z();
+            double px = dau.px()/dau.p();
+            double py = dau.py()/dau.p();
+            double pz = dau.pz()/dau.p();
+            double pv_x = v.position().x();
+            double pv_y = v.position().y();
+            double pv_z = v.position().z();
+            double tmin = - ( px*(x-pv_x) + py*(y-pv_y) + pz*(z-pv_z) );
+            double dx_min = pv_x - x - tmin*px;
+            double dy_min = pv_y - y - tmin*py;
+            double dz_min = pv_z - z - tmin*pz;
+           
+            double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
+            double d = sqrt( dxy*dxy + dz_min*dz_min);
+
+            // if the vertex is closer than the current reference vertex, set dMin, dxyMin, dzMin, and also change the vertex of reference
+            if( d < dMin ) {
+              dMin = d;
+              dxyMin = dxy;
+              dzMin = dz_min;
+              jetVertex_x = v.position().x();
+              jetVertex_y = v.position().y();
+              jetVertex_z = v.position().z();
+             
+            }
+        }
+  
+        // now do the same for the secondary vertices
+        // however, for some reason, I have to use additional variable here, jet constitutent won't accept a VertexCompositePtrCandidate as a new reference
+        for( const reco::VertexCompositePtrCandidate &v : *secVertices ) {
+            double x = dau.vertex().x();
+            double y = dau.vertex().y();
+            double z = dau.vertex().z();
+            double px = dau.px()/dau.p();
+            double py = dau.py()/dau.p();
+            double pz = dau.pz()/dau.p();
+            double pv_x = v.vx();
+            double pv_y = v.vy();
+            double pv_z = v.vz();
+            double tmin = - ( px*(x-pv_x) + py*(y-pv_y) + pz*(z-pv_z) );
+            double dx_min = pv_x - x - tmin*px;
+            double dy_min = pv_y - y - tmin*py;
+            double dz_min = pv_z - z - tmin*pz;
+           
+            double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
+            double d = sqrt( dxy*dxy + dz_min*dz_min);
+            
+            if( d < dMin ) {
+              dMin = d;
+              dxyMin = dxy;
+              dzMin = dz_min;
+              ctr = -1;  
+              jetVertex_x = v.vx();
+              jetVertex_y = v.vy();
+              jetVertex_z = v.vz();
+          }
+        }
+        
+        // now fill all the variables for the jet constituent
+        constVert_closestVertex_dxy.push_back( dxyMin );
+        constVert_closestVertex_dz.push_back( dzMin );
+        constVert_closestVertex_d.push_back( dMin );
+        constVert_x.push_back( jetVertex_x );
+        constVert_y.push_back( jetVertex_y );
+        constVert_z.push_back( jetVertex_z );
+        const_pt.push_back( dau.pt() );
+        const_eta.push_back( dau.eta() );
+        const_phi.push_back( dau.phi() );
+        const_charge.push_back( dau.charge() );
+     }
+
+     // now calculate the jet-vertex:
+     int nCons = 0;
+     double weightednCons = 0.;
+     std::vector<double> error(3,0.);
+     double theScore = 0.;
+     std::vector<double> position = CalculateVertex( constVert_x, constVert_y, constVert_z, const_pt, const_charge, constVert_closestVertex_d, nCons, weightednCons, error, theScore );
+     
+     double averageDistance = 0.;
+     double rmsDistance = 0.;
+     double chargedConsts = 0.;
+     // now I know the jet vertex - calculated average distance to the highest score vertex
+     for( unsigned int iConst = 0; iConst < const_px.size(); ++iConst ) {
+        if( const_charge.at(iConst) == 0 ) continue;
+        double const_p = sqrt( const_px.at(iConst)*const_px.at(iConst) + const_py.at(iConst)*const_py.at(iConst) + const_pz.at(iConst)*const_pz.at(iConst) );
+        double px = const_px.at(iConst)/const_p;
+        double py = const_py.at(iConst)/const_p;
+        double pz = const_pz.at(iConst)/const_p;
+        double x = const_pca0_x.at(iConst);
+        double y = const_pca0_y.at(iConst);
+        double z = const_pca0_z.at(iConst);
+        double target_x = position.at(0);
+        double target_y = position.at(1);
+        double target_z = position.at(2);
+            
+        double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
+        double dx_min = target_x - x - tmin*px;
+        double dy_min = target_y - y - tmin*py;
+        double dz_min = target_z - z - tmin*pz;
+           
+        double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
+        double d = sqrt( dxy*dxy + dz_min*dz_min);
+        averageDistance += d;
+        chargedConsts += 1.;
+     }
+     for( unsigned int iConst = 0; iConst < const_px.size(); ++iConst ) {
+        if( const_charge.at(iConst) == 0 ) continue;
+        double const_p = sqrt( const_px.at(iConst)*const_px.at(iConst) + const_py.at(iConst)*const_py.at(iConst) + const_pz.at(iConst)*const_pz.at(iConst) );
+        double px = const_px.at(iConst)/const_p;
+        double py = const_py.at(iConst)/const_p;
+        double pz = const_pz.at(iConst)/const_p;
+        double x = const_pca0_x.at(iConst);
+        double y = const_pca0_y.at(iConst);
+        double z = const_pca0_z.at(iConst);
+        double target_x = position.at(0);
+        double target_y = position.at(1);
+        double target_z = position.at(2);
+            
+        double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
+        double dx_min = target_x - x - tmin*px;
+        double dy_min = target_y - y - tmin*py;
+        double dz_min = target_z - z - tmin*pz;
+           
+        double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
+        double d = sqrt( dxy*dxy + dz_min*dz_min);
+        rmsDistance += (d - averageDistance)*(d - averageDistance);
+     }
+     rmsDistance /= chargedConsts;
+     rmsDistance = sqrt( rmsDistance );
+     averageDistance /= chargedConsts;
+
+     // and fill allthe jet variables
+     std::vector<double> jpts;
+
+     jecUnc->setJetEta(j.eta() );
+     jecUnc->setJetPt(j.pt()); // here you must use the CORRECTED jet pt
+     double unc = jecUnc->getUncertainty(true);
+     
+     jpts.push_back( j.pt() );
+     jpts.push_back( j.pt()*(1.+unc));
+     jpts.push_back( j.pt()*(1.-unc));
+     
+     jet_pt->push_back( jpts );
+     jet_eta->push_back( j.eta() );
+     jet_phi->push_back( j.phi() );
+     for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) { 
+       jet_btagInfo->at(iBtagAlgo)->push_back( j.bDiscriminator( btagAlgorithms.at(iBtagAlgo) ) );
+     }
+     jet_vertex_x->push_back( position.at(0) );
+     jet_vertex_y->push_back( position.at(1) );
+     jet_vertex_z->push_back( position.at(2) );
+     jet_vertex_score->push_back( theScore );
+     jet_nCons->push_back( nCons );
+     jet_averageDistance->push_back( averageDistance );
+     jet_rmsDistance->push_back( rmsDistance );
+    /* 
+     jet_constVertex_x->push_back( constVert_x ); 
+     jet_constVertex_y->push_back( constVert_y ); 
+     jet_constVertex_z->push_back( constVert_z ); 
+     jet_const_closestVertex_dxy->push_back(constVert_closestVertex_dxy);
+     jet_const_closestVertex_dz->push_back(constVert_closestVertex_dz);
+     jet_const_closestVertex_d->push_back(constVert_closestVertex_d);
+     jet_const_pt->push_back( const_pt );
+     jet_const_eta->push_back( const_eta );
+     jet_const_phi->push_back( const_phi );
+     jet_const_charge->push_back( const_charge );
+     jet_const_px->push_back( const_px );
+     jet_const_py->push_back( const_py );
+     jet_const_pz->push_back( const_pz );
+     jet_const_pca0_x->push_back( const_pca0_x );
+     jet_const_pca0_y->push_back( const_pca0_y );
+     jet_const_pca0_z->push_back( const_pca0_z );
+     */ 
+  }
+  }
 
   
    // now fill the secondary vertex information
@@ -1174,7 +1440,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // and fill the met
    // now also store the shifted met values considering the uncertainties
    const pat::MET &themet = mets->front();
-   met->push_back( themet.corSumEt(pat::MET::METCorrectionLevel::Type01) ); 
+   met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) ); 
    met_x->push_back( themet.corPx(pat::MET::METCorrectionLevel::Type01) );
    met_y->push_back( themet.corPy(pat::MET::METCorrectionLevel::Type01) );
    for( pat::MET::METUncertainty iMETUNC = pat::MET::METUncertainty::JetResUp; iMETUNC < pat::MET::METUncertainty::METUncertaintySize; iMETUNC = pat::MET::METUncertainty( iMETUNC + 1) ) {
@@ -1183,6 +1449,15 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      met_y->push_back( themet.shiftedPy( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
    }
 
+   // if is MC, get the gen level HT
+   if( !isData ) {
+     GenLevel_HT = 0.;
+     for( size_t i = 0; i < pruned->size(); ++i ) {
+       if( (*pruned)[i].status() != 23 ) continue;
+       if( (*pruned)[i].pdgId() != 21 && abs((*pruned)[i].pdgId()) > 6 ) continue;
+       GenLevel_HT += (*pruned)[i].pt();
+     }
+   }
    // and the gen info if required:
    if( storeGenData && !isData ) {
      for(size_t i = 0; i<packed->size(); i++){
