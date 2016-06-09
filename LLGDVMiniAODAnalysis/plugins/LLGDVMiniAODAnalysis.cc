@@ -144,6 +144,11 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *met_x = new std::vector<double>;
       std::vector<double> *met_y = new std::vector<double>;
 
+      // jets passing tight jet id for MHT calculation
+      std::vector<double> *tightJet_eta = new std::vector<double>;
+      std::vector<double> *tightJet_phi = new std::vector<double>;
+      std::vector<double> *tightJet_pt = new std::vector<double>;
+
       // the jet variables
       std::vector<double> *jet_eta = new std::vector<double>;
       std::vector<double> *jet_phi = new std::vector<double>;
@@ -370,6 +375,10 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
       jet_btagInfo->push_back( new std::vector<double> );
    }
 
+   tOutput -> Branch("TightJet_eta", &tightJet_eta );
+   tOutput -> Branch("TightJet_phi", &tightJet_phi );
+   tOutput -> Branch("TightJet_pt", &tightJet_pt );
+
    // set the output branches for the tree
    tOutput -> Branch("RecoJet_eta", &jet_eta );
    tOutput -> Branch("RecoJet_phi", &jet_phi );
@@ -552,6 +561,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    triggerBits->clear();
    triggerNamesTree->clear();
    METFilterBits->clear();
+   tightJet_eta->clear();
+   tightJet_phi->clear();
+   tightJet_pt->clear();
    jet_eta->clear();
    jet_phi->clear();
    jet_pt->clear();
@@ -933,22 +945,37 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    int ctrJet = -1;
    if( useCHSJets ) {
    for( const pat::Jet &j : *jets ) {
-     
+    
+     bool hasLargeMuonFraction = false;
+     bool hasLargeEMFraction = false;
+     bool hasSmallNeutralMultiplicity = false;
+
      if( j.neutralHadronEnergyFraction() >= 0.90 ) continue;
-     if( j.neutralEmEnergyFraction() >= 0.90 ) continue;
+     if( j.neutralEmEnergyFraction() >= 0.99 ) continue;
+     if( j.neutralEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true; 
      if( j.numberOfDaughters() <= 1 ) continue;
-     if( j.muonEnergyFraction() >= 0.8 ) continue;
-     
+     //if( j.muonEnergyFraction() >= 0.8 ) continue;
+     if( j.muonEnergyFraction() >= 0.8 ) hasLargeMuonFraction = true;
+
      if( fabs(j.eta()) < 2.4 ) {
-        if( j.chargedEmEnergyFraction() >= 0.9 ) continue;
+        if( j.chargedEmEnergyFraction() >= 0.99 ) continue;
+        if( j.chargedEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
         if( j.chargedHadronEnergyFraction() <= 0. ) continue;
         if( j.chargedMultiplicity() <= 0. ) continue;
      }
      if( fabs(j.eta()) > 3.0 ) {
-        if( j.neutralMultiplicity() <= 10 ) continue;
+        if( j.neutralMultiplicity() <= 10 ) hasSmallNeutralMultiplicity = true;
      }
      if( j.pt() < 10. ) continue;
      
+     tightJet_pt->push_back( j.pt() );
+     tightJet_eta->push_back( j.eta() );
+     tightJet_phi->push_back( j.phi() );
+
+
+     if( hasSmallNeutralMultiplicity || hasLargeMuonFraction || hasLargeEMFraction ) continue;
+
+
      ctrJet += 1;
      
      std::vector<double> constVert_x;
