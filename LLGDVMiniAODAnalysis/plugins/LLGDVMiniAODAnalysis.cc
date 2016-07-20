@@ -2,10 +2,10 @@
 //
 // Package:    LLGDVMiniAODAnalysis/LLGDVMiniAODAnalysis
 // Class:      LLGDVMiniAODAnalysis
-// 
+//
 /**\class LLGDVMiniAODAnalysis LLGDVMiniAODAnalysis.cc LLGDVMiniAODAnalysis/LLGDVMiniAODAnalysis/plugins/LLGDVMiniAODAnalysis.cc
 
- Description: 
+ Description:
  Simple analysis class to dump output in a plain rootfile
 
  Implementation:
@@ -132,7 +132,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       int nEventsAccepted = 0;
 
 
-      
+
       // the variables used for output
       // pileup related variables;
       float NumberOfTrueInteractions;
@@ -204,7 +204,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<int> *METFilterBits = new std::vector<int>;
       std::vector<std::string> *METFilterNames = new std::vector<std::string>;
 
-      // the jet constituents 
+      // the jet constituents
       /*
       std::vector<std::vector<double> >* jet_constVertex_x = new std::vector<std::vector<double> >;
       std::vector<std::vector<double> >* jet_constVertex_y = new std::vector<std::vector<double> >;
@@ -278,7 +278,7 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
 
       double sumOfWeights = 0.;
       double generatorWeight = 0.;
-      std::vector<double> *generatorWeights = new std::vector<double>; 
+      std::vector<double> *generatorWeights = new std::vector<double>;
       //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
@@ -312,7 +312,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   genEvtInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("GenEventInfo") )),
   PupInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pupInfo"))),
   muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
-  electronToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))), 
+  electronToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tauToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
   prunedGenToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
   packedGenToken_(consumes<edm::View<pat::PackedGenParticle> >(iConfig.getParameter<edm::InputTag>("packedGenParticles"))),
@@ -324,7 +324,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
   eleHEEPIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleHEEPIdMap")))
   {
    //now do what ever initialization is needed
-   
+
    // define the triggers we (might) want to use
    // these seem to be interesting for us
    /* triggerNames->push_back( "HLT_PFJet260_v1" );
@@ -336,7 +336,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    bool RunLeptonTriggers = iConfig.getParameter<bool>("RunLeptonTriggers");
    isData = iConfig.getParameter<bool>("IsData");
    storeGenData = iConfig.getParameter<bool>("StoreGenData");
-   ignoreTriggers = iConfig.getParameter<bool>("IgnoreTriggers"); 
+   ignoreTriggers = iConfig.getParameter<bool>("IgnoreTriggers");
    useCHSJets = iConfig.getParameter<bool>("UseCHSJets");
 
    std::string trigVersion = (isData) ? "_v2" : "_v1";
@@ -360,7 +360,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
     triggerNames->push_back("HLT_Ele12_CaloIdL_TrackIdL_IsoVL");
     triggerNames->push_back("HLT_Mu50");
     triggerNames->push_back("HLT_Mu45_eta2p1");
-   
+
    }
    //for( unsigned int itrig = 0; itrig < triggerNames->size(); ++itrig ) {
    //   triggerNames->at(itrig) += trigVersion;
@@ -392,7 +392,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoJet_RMSDistanceToVertex", &jet_rmsDistance );
    for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
      std::string branchname = "RecoJet_btag_" + btagAlgorithms.at(iBtagAlgo);
-     tOutput -> Branch( branchname.c_str(), &(jet_btagInfo->at(iBtagAlgo)) ); 
+     tOutput -> Branch( branchname.c_str(), &(jet_btagInfo->at(iBtagAlgo)) );
    }
    /*
    tOutput -> Branch("RecoJet_constVertex_x", &jet_constVertex_x );
@@ -411,7 +411,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoJet_const_closestVertex_d", &jet_const_closestVertex_d );
    tOutput -> Branch("RecoJet_const_eta", &jet_const_eta );
    tOutput -> Branch("RecoJet_const_phi", &jet_const_phi );
-   */ 
+   */
    tOutput -> Branch("PUINFO_NumberOfTrueInteractions", &NumberOfTrueInteractions );
    tOutput -> Branch("PUINFO_NumberOfObservedInteractiosn", &NumberOfObservedInteractions );
    tOutput -> Branch("GenLevel_HT", &GenLevel_HT );
@@ -447,18 +447,18 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("TriggerNames", &triggerNamesTree );
    tOutput -> Branch("METFilterBits", &METFilterBits );
    tOutput -> Branch("METFilterNames", &METFilterNames );
-   
+
    tOutput -> Branch("RecoVertex_x", &vertex_x );
    tOutput -> Branch("RecoVertex_y", &vertex_y );
    tOutput -> Branch("RecoVertex_z", &vertex_z );
-   tOutput -> Branch("RecoVertex_ndof", &vertex_ndof ); 
+   tOutput -> Branch("RecoVertex_ndof", &vertex_ndof );
    tOutput -> Branch("RecoVertex_d0", &vertex_d0 );
    tOutput -> Branch("RecoVertex_xError", &vertex_dx );
    tOutput -> Branch("RecoVertex_yError", &vertex_dy );
    tOutput -> Branch("RecoVertex_zError", &vertex_dz );
    tOutput -> Branch("RecoVertex_nTracks", &vertex_nTracks );
    tOutput -> Branch("RecoVertex_pt", &vertex_pt );
-   
+
    tOutput -> Branch("RecoSecVertex_x", &secVertex_x );
    tOutput -> Branch("RecoSecVertex_y", &secVertex_y );
    tOutput -> Branch("RecoSecVertex_z", &secVertex_z );
@@ -468,7 +468,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("RecoSecVertex_xError", &secVertex_dx );
    tOutput -> Branch("RecoSecVertex_yError", &secVertex_dy );
    tOutput -> Branch("RecoSecVertex_zError", &secVertex_dz );
- 
+
    tOutput -> Branch("TriggerObject_TriggerName", &to_TriggerNames );
    tOutput -> Branch("TriggerObject_pt", &to_pt );
    tOutput -> Branch("TriggerObject_eta", &to_eta );
@@ -508,7 +508,7 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
 
 LLGDVMiniAODAnalysis::~LLGDVMiniAODAnalysis()
 {
- 
+
    // do anything here that needs to be done at desctruction time
    // (e.g. close files, deallocate resources etc.)
 
@@ -524,10 +524,10 @@ void
 LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
-  
+
    nEventsProcessed += 1;
    // clear all variables
-   met->clear(); 
+   met->clear();
    met_x -> clear();
    met_y -> clear();
    muon_px->clear();
@@ -550,7 +550,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    electron_iso->clear();
    electron_charge->clear();
    electron_isVeto->clear();
-   electron_isLoose->clear(); 
+   electron_isLoose->clear();
    electron_isMedium->clear();
    electron_isTight->clear();
    electron_isHEEP->clear();
@@ -642,24 +642,24 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
 
    edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-   iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl); 
+   iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl);
    JetCorrectorParameters const & JetCorPar = (*JetCorParColl)["Uncertainty"];
    JetCorrectionUncertainty *jecUnc = new JetCorrectionUncertainty(JetCorPar);
 
    // get the weight and PU info
    if( !isData ) {
      //generator weight:
-     edm::Handle<GenEventInfoProduct> genEvtInfo; 
+     edm::Handle<GenEventInfoProduct> genEvtInfo;
      iEvent.getByToken( genEvtInfoToken_, genEvtInfo );
 
      generatorWeight = genEvtInfo->weight();
      sumOfWeights += generatorWeight;
-   
+
      const std::vector<double>& evtWeights = genEvtInfo->weights();
      for( unsigned int iWeight = 0; iWeight < evtWeights.size(); ++iWeight ) {
        generatorWeights->push_back( evtWeights.at(iWeight ) );
      }
-  
+
      // pileup info:
      Handle<std::vector< PileupSummaryInfo > >  PupInfo;
      iEvent.getByToken(PupInfoToken_, PupInfo);
@@ -667,7 +667,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      std::vector<PileupSummaryInfo>::const_iterator PVI;
      for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
        int BX = PVI->getBunchCrossing();
-       if(BX == 0) { 
+       if(BX == 0) {
           NumberOfTrueInteractions = PVI->getTrueNumInteractions();
           NumberOfObservedInteractions = PVI->getPU_NumInteractions();
        }
@@ -691,19 +691,19 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    edm::Handle<edm::View<reco::GsfElectron> > electrons;
    iEvent.getByToken(electronToken_, electrons);
-   
+
    edm::Handle<pat::MuonCollection> muons;
    iEvent.getByToken(muonToken_, muons);
 
    edm::Handle<pat::TauCollection> taus;
    iEvent.getByToken(tauToken_, taus);
-   
+
    Handle<pat::JetCollection> jets;
    iEvent.getByToken( jetToken_, jets );
-   
+
    Handle<reco::VertexCollection> vertices;
    iEvent.getByToken( vtxToken_, vertices );
-   
+
    Handle<reco::VertexCompositePtrCandidateCollection> secVertices;
    iEvent.getByToken( secVtxToken_, secVertices );
 
@@ -712,22 +712,22 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    edm::Handle<edm::TriggerResults> evTriggerBits;
    iEvent.getByToken( triggerBits_, evTriggerBits );
-  
+
    edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
    iEvent.getByToken(triggerObjects_, triggerObjects);
 
    edm::Handle<edm::TriggerResults> evMETFilterBits;
    iEvent.getByToken( METFilterBits_, evMETFilterBits );
-  
+
    Handle<reco::GenJetCollection> genJets;
    iEvent.getByToken( genJetToken_, genJets );
-  
+
    Handle<pat::PackedCandidateCollection> pfs;
    iEvent.getByToken(pfToken_, pfs);
-   
+
    Handle<edm::View<reco::GenParticle> > pruned;
    Handle<edm::View<pat::PackedGenParticle> > packed;
-   
+
    if( !isData ) {
      iEvent.getByToken(prunedGenToken_, pruned);
      if( storeGenData ) {
@@ -738,18 +738,18 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
    edm::EventAuxiliary aux = iEvent.eventAuxiliary();
    edm::EventID id = aux.id();
-  
+
    EventNumber = id.event();
    RunNumber = id.run();
    LuminosityBlock = id.luminosityBlock();
 
 
-   
+
    const edm::TriggerNames &filterNames = iEvent.triggerNames(*evMETFilterBits);
    bool passETMissFilter = true;
    for(unsigned int i = 0; i < evMETFilterBits->size(); ++i ) {
    // std::cout <<" testing met filter " << filterNames.triggerName(i) << std::endl;
-    if(    filterNames.triggerName(i) == "Flag_HBHENoiseFilter" 
+    if(    filterNames.triggerName(i) == "Flag_HBHENoiseFilter"
         || filterNames.triggerName(i) == "Flag_HBHENoiseIsoFilter"
         || filterNames.triggerName(i) == "Flag_CSCTightHalo2015Filter"
         || filterNames.triggerName(i) == "Flag_EcalDeadCellTriggerPrimitiveFilter"
@@ -757,9 +757,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         || filterNames.triggerName(i) == "Flag_eeBadScFilter"
         || filterNames.triggerName(i) == "Flag_chargedHadronTrackResolutionFilter"
         || filterNames.triggerName(i) == "Flag_muonBadTrackFilter" ) {
-          if( !evMETFilterBits->accept(i) ) passETMissFilter = false;    
+          if( !evMETFilterBits->accept(i) ) passETMissFilter = false;
         }
-   } 
+   }
    if( !passETMissFilter && !ignoreTriggers ) return;
 
    const edm::TriggerNames &names = iEvent.triggerNames(*evTriggerBits);
@@ -780,7 +780,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    }
    // store only events in the ntuple which pass the trigger
    if( !passTrigger && !ignoreTriggers ) return;
-  
+
    // now fill the primary vertex information
    int firstGoodVertexIdx = -1;
    int iVtx = 0;
@@ -809,7 +809,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    //std::string trigVersion = (isData) ? "_v2" : "_v1";
    //to_TriggerNames->push_back("HLT_Mu50" + trigVersion );
    to_TriggerNames->push_back("HLT_Mu50" );
-  
+
 
    for( unsigned int k = 0; k < to_TriggerNames->size(); ++k ) {
       std::vector<double> pt, eta, phi;
@@ -818,7 +818,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       to_phi->push_back( phi );
    }
 
-   for (pat::TriggerObjectStandAlone obj : *triggerObjects) { 
+   for (pat::TriggerObjectStandAlone obj : *triggerObjects) {
       obj.unpackPathNames(names);
       //std::cout << "\t   Collection: " << obj.collection() << std::endl;
       //std::cout << "\t   Type IDs:   ";
@@ -833,10 +833,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       for (unsigned h = 0, n = pathNamesAll.size(); h < n; ++h) {
          for( unsigned int k = 0; k < to_TriggerNames->size(); ++k ) {
            if( pathNamesAll[h].find(to_TriggerNames->at(k)) != std::string::npos ) {
-              bool isBoth = obj.hasPathName( pathNamesAll[h], true, true ); 
-              //bool isL3   = obj.hasPathName( pathNamesAll[h], false, true ); 
-              bool isLF   = obj.hasPathName( pathNamesAll[h], true, false ); 
-              //bool isNone = obj.hasPathName( pathNamesAll[h], false, false ); 
+              bool isBoth = obj.hasPathName( pathNamesAll[h], true, true );
+              //bool isL3   = obj.hasPathName( pathNamesAll[h], false, true );
+              bool isLF   = obj.hasPathName( pathNamesAll[h], true, false );
+              //bool isNone = obj.hasPathName( pathNamesAll[h], false, false );
               if( isLF || isBoth ) {
                  to_pt->at(k).push_back( obj.pt() );
                  to_eta->at(k).push_back( obj.eta() );
@@ -852,21 +852,21 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       }
       //std::cout << std::endl;
    }
-   
+
    // muons
    // currently using the muon id taken from here:
    // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideMuonIdRun2
-   
+
    for( const pat::Muon &m : *muons ) {
       if( !m.isPFMuon() ) continue;
       if( !(m.isGlobalMuon() || m.isTrackerMuon()) ) continue;
       if( !m.isLooseMuon() ) continue;
       if( m.pt() < 10. ) continue;
       if( fabs(m.eta()) > 2.5 ) continue;
-      double pfRelIso = ( m.pfIsolationR04().sumChargedHadronPt 
-                        + std::max(0., m.pfIsolationR04().sumNeutralHadronEt + m.pfIsolationR04().sumPhotonEt - 0.5*m.pfIsolationR04().sumPUPt ) ) 
+      double pfRelIso = ( m.pfIsolationR04().sumChargedHadronPt
+                        + std::max(0., m.pfIsolationR04().sumNeutralHadronEt + m.pfIsolationR04().sumPhotonEt - 0.5*m.pfIsolationR04().sumPUPt ) )
                         / m.pt();
-     
+
       muon_px->push_back( m.px() );
       muon_py->push_back( m.pz() );
       muon_pz->push_back( m.py() );
@@ -879,7 +879,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       muon_isMediumMuon->push_back( m.isMediumMuon() );
       muon_isTightMuon->push_back( m.isTightMuon(vertices->at(firstGoodVertexIdx)) );
    }
-  
+
 
 
    // electrons
@@ -932,7 +932,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    for( const pat::Tau &tau : *taus ) {
     if( tau.pt() < 20. ) continue;
     if( !( tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT") >= 0.5 && tau.tauID("againstMuonLoose3") >= 0.5 && tau.tauID("againstElectronVLooseMVA6") >= 0.5 ) ) continue;
-    
+
     tau_px->push_back( tau.px() );
     tau_py->push_back( tau.py() );
     tau_pz->push_back( tau.pz() );
@@ -943,16 +943,17 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // using the tight selection from:
    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID#Recommendations_for_13_TeV_data
    int ctrJet = -1;
+   //TODO change the code here below test 
    if( useCHSJets ) {
    for( const pat::Jet &j : *jets ) {
-    
+
      bool hasLargeMuonFraction = false;
      bool hasLargeEMFraction = false;
      bool hasSmallNeutralMultiplicity = false;
 
      if( j.neutralHadronEnergyFraction() >= 0.90 ) continue;
      if( j.neutralEmEnergyFraction() >= 0.99 ) continue;
-     if( j.neutralEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true; 
+     if( j.neutralEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
      if( j.numberOfDaughters() <= 1 ) continue;
      //if( j.muonEnergyFraction() >= 0.8 ) continue;
      if( j.muonEnergyFraction() >= 0.8 ) hasLargeMuonFraction = true;
@@ -967,7 +968,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         if( j.neutralMultiplicity() <= 10 ) hasSmallNeutralMultiplicity = true;
      }
      if( j.pt() < 10. ) continue;
-     
+
      tightJet_pt->push_back( j.pt() );
      tightJet_eta->push_back( j.eta() );
      tightJet_phi->push_back( j.phi() );
@@ -977,7 +978,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
 
      ctrJet += 1;
-     
+
      std::vector<double> constVert_x;
      std::vector<double> constVert_y;
      std::vector<double> constVert_z;
@@ -995,13 +996,13 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      std::vector<double> constVert_closestVertex_dz;
      std::vector<double> constVert_closestVertex_d;
      std::vector<double> average_distance( vertices->size(), 0. );
-     
+
      // loop over the jet constituents to find the vertex closest to each:
      for( unsigned int iD = 0; iD < j.numberOfDaughters(); ++iD ) {
-        
+
         const pat::PackedCandidate &dau1 = dynamic_cast<const pat::PackedCandidate &>(*j.daughter(iD));
         pat::PackedCandidate dau(dau1);
-      
+
         const_px.push_back( dau.px() );
         const_py.push_back( dau.py() );
         const_pz.push_back( dau.pz() );
@@ -1014,7 +1015,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double dxyMin = 10000.;
         double dzMin = 10000.;
         int ctr = -1;
-       
+
         // get the unity vector pointing in the direction of the momentum and a reference point to build a self-made pseudo track
         // the 'track' is then (x(t), y(t), z(t) ) = (x,y,z) + t*(px,py,pz);
         // tmin, the time parameter for the point of closest approach is determined by minimising d = sqrt( (vx - x(t))^2 + (vy - y(t))^2 + (vz - z(t))^2);
@@ -1038,7 +1039,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
             double dx_min = pv_x - x - tmin*px;
             double dy_min = pv_y - y - tmin*py;
             double dz_min = pv_z - z - tmin*pz;
-           
+
             double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
             double d = sqrt( dxy*dxy + dz_min*dz_min);
 
@@ -1050,10 +1051,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
               jetVertex_x = v.position().x();
               jetVertex_y = v.position().y();
               jetVertex_z = v.position().z();
-             
+
             }
         }
-  
+
         // now do the same for the secondary vertices
         // however, for some reason, I have to use additional variable here, jet constitutent won't accept a VertexCompositePtrCandidate as a new reference
         for( const reco::VertexCompositePtrCandidate &v : *secVertices ) {
@@ -1070,21 +1071,21 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
             double dx_min = pv_x - x - tmin*px;
             double dy_min = pv_y - y - tmin*py;
             double dz_min = pv_z - z - tmin*pz;
-           
+
             double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
             double d = sqrt( dxy*dxy + dz_min*dz_min);
-            
+
             if( d < dMin ) {
               dMin = d;
               dxyMin = dxy;
               dzMin = dz_min;
-              ctr = -1;  
+              ctr = -1;
               jetVertex_x = v.vx();
               jetVertex_y = v.vy();
               jetVertex_z = v.vz();
           }
         }
-        
+
         // now fill all the variables for the jet constituent
         constVert_closestVertex_dxy.push_back( dxyMin );
         constVert_closestVertex_dz.push_back( dzMin );
@@ -1104,7 +1105,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      std::vector<double> error(3,0.);
      double theScore = 0.;
      std::vector<double> position = CalculateVertex( constVert_x, constVert_y, constVert_z, const_pt, const_charge, constVert_closestVertex_d, nCons, weightednCons, error, theScore );
-     
+
      double averageDistance = 0.;
      double rmsDistance = 0.;
      double chargedConsts = 0.;
@@ -1121,12 +1122,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double target_x = position.at(0);
         double target_y = position.at(1);
         double target_z = position.at(2);
-            
+
         double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
         double dx_min = target_x - x - tmin*px;
         double dy_min = target_y - y - tmin*py;
         double dz_min = target_z - z - tmin*pz;
-           
+
         double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
         double d = sqrt( dxy*dxy + dz_min*dz_min);
         averageDistance += d;
@@ -1144,12 +1145,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double target_x = position.at(0);
         double target_y = position.at(1);
         double target_z = position.at(2);
-            
+
         double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
         double dx_min = target_x - x - tmin*px;
         double dy_min = target_y - y - tmin*py;
         double dz_min = target_z - z - tmin*pz;
-           
+
         double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
         double d = sqrt( dxy*dxy + dz_min*dz_min);
         rmsDistance += (d - averageDistance)*(d - averageDistance);
@@ -1164,15 +1165,15 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jecUnc->setJetEta(j.eta() );
      jecUnc->setJetPt(j.pt()); // here you must use the CORRECTED jet pt
      double unc = jecUnc->getUncertainty(true);
-     
+
      jpts.push_back( j.pt() );
      jpts.push_back( j.pt()*(1.+unc));
      jpts.push_back( j.pt()*(1.-unc));
-     
+
      jet_pt->push_back( jpts );
      jet_eta->push_back( j.eta() );
      jet_phi->push_back( j.phi() );
-     for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) { 
+     for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
        jet_btagInfo->at(iBtagAlgo)->push_back( j.bDiscriminator( btagAlgorithms.at(iBtagAlgo) ) );
      }
      jet_vertex_x->push_back( position.at(0) );
@@ -1182,10 +1183,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_nCons->push_back( nCons );
      jet_averageDistance->push_back( averageDistance );
      jet_rmsDistance->push_back( rmsDistance );
-    /* 
-     jet_constVertex_x->push_back( constVert_x ); 
-     jet_constVertex_y->push_back( constVert_y ); 
-     jet_constVertex_z->push_back( constVert_z ); 
+    /*
+     jet_constVertex_x->push_back( constVert_x );
+     jet_constVertex_y->push_back( constVert_y );
+     jet_constVertex_z->push_back( constVert_z );
      jet_const_closestVertex_dxy->push_back(constVert_closestVertex_dxy);
      jet_const_closestVertex_dz->push_back(constVert_closestVertex_dz);
      jet_const_closestVertex_d->push_back(constVert_closestVertex_d);
@@ -1199,19 +1200,19 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_const_pca0_x->push_back( const_pca0_x );
      jet_const_pca0_y->push_back( const_pca0_y );
      jet_const_pca0_z->push_back( const_pca0_z );
-     */ 
+     */
   }
   }
    else {
    for( const reco::Jet &jr : *jetsnoCHS ) {
 
      const pat::Jet j( jr );
-     
+
      if( j.neutralHadronEnergyFraction() >= 0.90 ) continue;
      if( j.neutralEmEnergyFraction() >= 0.90 ) continue;
      if( j.numberOfDaughters() <= 1 ) continue;
      if( j.muonEnergyFraction() >= 0.8 ) continue;
-     
+
      if( fabs(j.eta()) < 2.4 ) {
         if( j.chargedEmEnergyFraction() >= 0.9 ) continue;
         if( j.chargedHadronEnergyFraction() <= 0. ) continue;
@@ -1221,9 +1222,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         if( j.neutralMultiplicity() <= 10 ) continue;
      }
      if( j.pt() < 10. ) continue;
-     
+
      ctrJet += 1;
-     
+
      std::vector<double> constVert_x;
      std::vector<double> constVert_y;
      std::vector<double> constVert_z;
@@ -1241,13 +1242,13 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      std::vector<double> constVert_closestVertex_dz;
      std::vector<double> constVert_closestVertex_d;
      std::vector<double> average_distance( vertices->size(), 0. );
-     
+
      // loop over the jet constituents to find the vertex closest to each:
      for( unsigned int iD = 0; iD < j.numberOfDaughters(); ++iD ) {
-        
+
         const pat::PackedCandidate &dau1 = dynamic_cast<const pat::PackedCandidate &>(*j.daughter(iD));
         pat::PackedCandidate dau(dau1);
-      
+
         const_px.push_back( dau.px() );
         const_py.push_back( dau.py() );
         const_pz.push_back( dau.pz() );
@@ -1260,7 +1261,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double dxyMin = 10000.;
         double dzMin = 10000.;
         int ctr = -1;
-       
+
         // get the unity vector pointing in the direction of the momentum and a reference point to build a self-made pseudo track
         // the 'track' is then (x(t), y(t), z(t) ) = (x,y,z) + t*(px,py,pz);
         // tmin, the time parameter for the point of closest approach is determined by minimising d = sqrt( (vx - x(t))^2 + (vy - y(t))^2 + (vz - z(t))^2);
@@ -1284,7 +1285,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
             double dx_min = pv_x - x - tmin*px;
             double dy_min = pv_y - y - tmin*py;
             double dz_min = pv_z - z - tmin*pz;
-           
+
             double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
             double d = sqrt( dxy*dxy + dz_min*dz_min);
 
@@ -1296,10 +1297,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
               jetVertex_x = v.position().x();
               jetVertex_y = v.position().y();
               jetVertex_z = v.position().z();
-             
+
             }
         }
-  
+
         // now do the same for the secondary vertices
         // however, for some reason, I have to use additional variable here, jet constitutent won't accept a VertexCompositePtrCandidate as a new reference
         for( const reco::VertexCompositePtrCandidate &v : *secVertices ) {
@@ -1316,21 +1317,21 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
             double dx_min = pv_x - x - tmin*px;
             double dy_min = pv_y - y - tmin*py;
             double dz_min = pv_z - z - tmin*pz;
-           
+
             double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
             double d = sqrt( dxy*dxy + dz_min*dz_min);
-            
+
             if( d < dMin ) {
               dMin = d;
               dxyMin = dxy;
               dzMin = dz_min;
-              ctr = -1;  
+              ctr = -1;
               jetVertex_x = v.vx();
               jetVertex_y = v.vy();
               jetVertex_z = v.vz();
           }
         }
-        
+
         // now fill all the variables for the jet constituent
         constVert_closestVertex_dxy.push_back( dxyMin );
         constVert_closestVertex_dz.push_back( dzMin );
@@ -1350,7 +1351,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      std::vector<double> error(3,0.);
      double theScore = 0.;
      std::vector<double> position = CalculateVertex( constVert_x, constVert_y, constVert_z, const_pt, const_charge, constVert_closestVertex_d, nCons, weightednCons, error, theScore );
-     
+
      double averageDistance = 0.;
      double rmsDistance = 0.;
      double chargedConsts = 0.;
@@ -1367,12 +1368,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double target_x = position.at(0);
         double target_y = position.at(1);
         double target_z = position.at(2);
-            
+
         double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
         double dx_min = target_x - x - tmin*px;
         double dy_min = target_y - y - tmin*py;
         double dz_min = target_z - z - tmin*pz;
-           
+
         double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
         double d = sqrt( dxy*dxy + dz_min*dz_min);
         averageDistance += d;
@@ -1390,12 +1391,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         double target_x = position.at(0);
         double target_y = position.at(1);
         double target_z = position.at(2);
-            
+
         double tmin = - ( px*(x-target_x) + py*(y-target_y) + pz*(z-target_z) );
         double dx_min = target_x - x - tmin*px;
         double dy_min = target_y - y - tmin*py;
         double dz_min = target_z - z - tmin*pz;
-           
+
         double dxy = sqrt(dx_min*dx_min + dy_min*dy_min);
         double d = sqrt( dxy*dxy + dz_min*dz_min);
         rmsDistance += (d - averageDistance)*(d - averageDistance);
@@ -1410,15 +1411,15 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jecUnc->setJetEta(j.eta() );
      jecUnc->setJetPt(j.pt()); // here you must use the CORRECTED jet pt
      double unc = jecUnc->getUncertainty(true);
-     
+
      jpts.push_back( j.pt() );
      jpts.push_back( j.pt()*(1.+unc));
      jpts.push_back( j.pt()*(1.-unc));
-     
+
      jet_pt->push_back( jpts );
      jet_eta->push_back( j.eta() );
      jet_phi->push_back( j.phi() );
-     for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) { 
+     for( unsigned int iBtagAlgo = 0; iBtagAlgo < btagAlgorithms.size(); ++iBtagAlgo ) {
        jet_btagInfo->at(iBtagAlgo)->push_back( j.bDiscriminator( btagAlgorithms.at(iBtagAlgo) ) );
      }
      jet_vertex_x->push_back( position.at(0) );
@@ -1428,10 +1429,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_nCons->push_back( nCons );
      jet_averageDistance->push_back( averageDistance );
      jet_rmsDistance->push_back( rmsDistance );
-    /* 
-     jet_constVertex_x->push_back( constVert_x ); 
-     jet_constVertex_y->push_back( constVert_y ); 
-     jet_constVertex_z->push_back( constVert_z ); 
+    /*
+     jet_constVertex_x->push_back( constVert_x );
+     jet_constVertex_y->push_back( constVert_y );
+     jet_constVertex_z->push_back( constVert_z );
      jet_const_closestVertex_dxy->push_back(constVert_closestVertex_dxy);
      jet_const_closestVertex_dz->push_back(constVert_closestVertex_dz);
      jet_const_closestVertex_d->push_back(constVert_closestVertex_d);
@@ -1445,11 +1446,11 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      jet_const_pca0_x->push_back( const_pca0_x );
      jet_const_pca0_y->push_back( const_pca0_y );
      jet_const_pca0_z->push_back( const_pca0_z );
-     */ 
+     */
   }
   }
 
-  
+
    // now fill the secondary vertex information
    for( const reco::VertexCompositePtrCandidate &v : *secVertices ) {
       secVertex_x -> push_back( v.vx() );
@@ -1467,7 +1468,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // and fill the met
    // now also store the shifted met values considering the uncertainties
    const pat::MET &themet = mets->front();
-   met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) ); 
+   met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) );
    met_x->push_back( themet.corPx(pat::MET::METCorrectionLevel::Type01) );
    met_y->push_back( themet.corPy(pat::MET::METCorrectionLevel::Type01) );
    for( pat::MET::METUncertainty iMETUNC = pat::MET::METUncertainty::JetResUp; iMETUNC < pat::MET::METUncertainty::METUncertaintySize; iMETUNC = pat::MET::METUncertainty( iMETUNC + 1) ) {
@@ -1494,7 +1495,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         std::vector<double> mothersPy;
         std::vector<double> mothersPz;
         std::vector<double> mothersE;
-        const reco::Candidate *mother = (*packed)[i].mother(0) ; 
+        const reco::Candidate *mother = (*packed)[i].mother(0) ;
 
         while( mother ) {
           mothersId.push_back( mother->pdgId() );
@@ -1524,7 +1525,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    delete jecUnc;
    // finally, write it to the tree
    nEventsAccepted += 1;
-   tOutput->Fill(); 
+   tOutput->Fill();
 
 }
 
@@ -1578,14 +1579,14 @@ std::vector<double> CalculateVertex( std::vector<double> x, std::vector<double> 
 
 
 // ------------ method called once each job just before starting event loop  ------------
-void 
+void
 LLGDVMiniAODAnalysis::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void 
-LLGDVMiniAODAnalysis::endJob() 
+void
+LLGDVMiniAODAnalysis::endJob()
 {
 
   // save the metadata tree
@@ -1600,7 +1601,7 @@ LLGDVMiniAODAnalysis::endJob()
 
 // ------------ method called when starting to processes a run  ------------
 /*
-void 
+void
 LLGDVMiniAODAnalysis::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
@@ -1608,7 +1609,7 @@ LLGDVMiniAODAnalysis::beginRun(edm::Run const&, edm::EventSetup const&)
 
 // ------------ method called when ending the processing of a run  ------------
 /*
-void 
+void
 LLGDVMiniAODAnalysis::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
@@ -1616,7 +1617,7 @@ LLGDVMiniAODAnalysis::endRun(edm::Run const&, edm::EventSetup const&)
 
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
-void 
+void
 LLGDVMiniAODAnalysis::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
@@ -1624,7 +1625,7 @@ LLGDVMiniAODAnalysis::beginLuminosityBlock(edm::LuminosityBlock const&, edm::Eve
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 /*
-void 
+void
 LLGDVMiniAODAnalysis::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
