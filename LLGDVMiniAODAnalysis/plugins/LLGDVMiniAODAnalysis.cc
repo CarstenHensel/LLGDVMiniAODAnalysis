@@ -158,9 +158,9 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *allJet_chef = new std::vector<double>;
       std::vector<double> *allJet_ceef = new std::vector<double>;
       std::vector<int> *allJet_nconst = new std::vector<int>;
-      std::vector<double> *allJet_mufrac = new std::vec<double>;
-      std::vector<int> *allJet_cmult = new std::vec<int>;
-      std::vector<int> *allJet_nnp = new std::vec<int>;
+      std::vector<double> *allJet_mufrac = new std::vector<double>;
+      std::vector<int> *allJet_cmult = new std::vector<int>;
+      std::vector<int> *allJet_nnp = new std::vector<int>;
       //HC
 
       // the jet variables
