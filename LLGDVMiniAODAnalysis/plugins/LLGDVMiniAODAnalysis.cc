@@ -993,7 +993,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      for( const pat::Jet &j : *jets ) {
 
        if( j.pt() < 10. ) continue;
-       
+
        //fill the all jets branches:
        allJet_eta->push_back( j.eta() );
        allJet_phi->push_back( j.phi() );
@@ -1532,9 +1532,12 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // and fill the met
    // now also store the shifted met values considering the uncertainties
    const pat::MET &themet = mets->front();
-   met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) );
-   met_x->push_back( themet.corPx(pat::MET::METCorrectionLevel::Type01) );
-   met_y->push_back( themet.corPy(pat::MET::METCorrectionLevel::Type01) );
+   //met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) );
+   double tmp_px = themet.corPx(pat::MET::METCorrectionLevel::Type01);
+   double tmp py = themet.corPy(pat::MET::METCorrectionLevel::Type01);
+   met_x->push_back( tmp_px );
+   met_y->push_back( tmp_py );
+   met->push_back( sqrt(tmp_px * tmp_px + tmp_py * tmp_py) );
    for( pat::MET::METUncertainty iMETUNC = pat::MET::METUncertainty::JetResUp; iMETUNC < pat::MET::METUncertainty::METUncertaintySize; iMETUNC = pat::MET::METUncertainty( iMETUNC + 1) ) {
      met->push_back( themet.shiftedSumEt( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
      met_x->push_back( themet.shiftedPx( iMETUNC, pat::MET::METCorrectionLevel::Type01 ) );
