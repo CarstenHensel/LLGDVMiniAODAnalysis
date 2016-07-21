@@ -157,6 +157,10 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *allJet_neef = new std::vector<double>;
       std::vector<double> *allJet_chef = new std::vector<double>;
       std::vector<double> *allJet_ceef = new std::vector<double>;
+      std::vector<int> *allJet_nconst = new std::vector<int>;
+      std::vector<double> *allJet_mufrac = new std::vec<double>;
+      std::vector<int> *allJet_cmult = new std::vec<int>;
+      std::vector<int> *allJet_nnp = new std::vec<int>;
       //HC
 
       // the jet variables
@@ -397,6 +401,10 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("AllJet_nEEF", &allJet_neef );
    tOutput -> Branch("AllJet_cHEF", &allJet_chef );
    tOutput -> Branch("AllJet_cEEF", &allJet_ceef );
+   tOutput -> Branch("AllJet_nConst", &allJet_nconst );
+   tOutput -> Branch("AllJet_muFrac", &allJet_mufrac );
+   tOutput -> Branch("AllJet_cMult", &allJet_cmult );
+   tOutput -> Branch("AllJet_NNP", &allJet_nnp );
    //HC
 
 
@@ -593,6 +601,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    allJet_nhef->clear();
    allJet_ceef->clear();
    allJet_chef->clear();
+   allJet_nconst->clear();
+   allJet_mufrac->clear();
+   allJet_cmult->clear();
+   allJet_nnp->clear();
    //HC
    jet_eta->clear();
    jet_phi->clear();
@@ -991,7 +1003,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
        }
 
        if( j.pt() < 10. ) continue;
-       if( hasSmallNeutralMultiplicity || hasLargeMuonFraction || hasLargeEMFraction ) continue;
+       // if( hasSmallNeutralMultiplicity || hasLargeMuonFraction || hasLargeEMFraction ) continue;
 
        //fill the all jets branches:
        allJet_eta->push_back( j.eta() );
@@ -1001,7 +1013,10 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
        allJet_neef->push_back( j.neutralEMEnergyFraction() );
        allJet_chef->push_back( j.chargedHadronEnergyFraction() );
        allJet_ceef->push_back( j.chargedEMEnergyFraction() );
-
+       allJet_nconst->push_back( j.numberOfDaughters() );
+       allJet_mufrac->push_back( j.muonEnergyFraction() );
+       allJet_cmult->push_back( j.chargedMultiplicity() );
+       allJet_nnp->push_back( j.neutralMultiplicity() );
      }
      //HC
 
