@@ -149,6 +149,16 @@ class LLGDVMiniAODAnalysis : public edm::EDAnalyzer {
       std::vector<double> *tightJet_phi = new std::vector<double>;
       std::vector<double> *tightJet_pt = new std::vector<double>;
 
+      //CH all jets
+      std::vector<double> *allJet_eta = new std::vector<double>;
+      std::vector<double> *allJet_phi = new std::vector<double>;
+      std::vector<double> *allJet_pt = new std::vector<double>;
+      std::vector<double> *allJet_nhef = new std::vector<double>;
+      std::vector<double> *allJet_neef = new std::vector<double>;
+      std::vector<double> *allJet_chef = new std::vector<double>;
+      std::vector<double> *allJet_ceef = new std::vector<double>;
+      //HC
+
       // the jet variables
       std::vector<double> *jet_eta = new std::vector<double>;
       std::vector<double> *jet_phi = new std::vector<double>;
@@ -379,6 +389,17 @@ LLGDVMiniAODAnalysis::LLGDVMiniAODAnalysis(const edm::ParameterSet& iConfig):
    tOutput -> Branch("TightJet_phi", &tightJet_phi );
    tOutput -> Branch("TightJet_pt", &tightJet_pt );
 
+   //CH adding the all jets branches to the ntuple
+   tOutput -> Branch("AllJet_eta", &allJet_eta );
+   tOutput -> Branch("AllJet_phi", &allJet_phi );
+   tOutput -> Branch("AllJet_pt", &allJet_pt );
+   tOutput -> Branch("AllJet_nHEF", &allJet_nhef );
+   tOutput -> Branch("AllJet_nEEF", &allJet_neef );
+   tOutput -> Branch("AllJet_cHEF", &allJet_chef );
+   tOutput -> Branch("AllJet_cEEF", &allJet_ceef );
+   //HC
+
+
    // set the output branches for the tree
    tOutput -> Branch("RecoJet_eta", &jet_eta );
    tOutput -> Branch("RecoJet_phi", &jet_phi );
@@ -564,6 +585,15 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    tightJet_eta->clear();
    tightJet_phi->clear();
    tightJet_pt->clear();
+   //CH
+   allJet_eta->clear();
+   allJet_phi->clear();
+   allJet_pt->clear();
+   allJet_neef->clear();
+   allJet_nhef->clear();
+   allJet_ceef->clear();
+   allJet_chef->clear();
+   //HC
    jet_eta->clear();
    jet_phi->clear();
    jet_pt->clear();
@@ -944,8 +974,37 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID#Recommendations_for_13_TeV_data
    int ctrJet = -1;
    //TODO change the code here below test
-   //another commit test 
+   //another commit test
    if( useCHSJets ) {
+
+     //CH
+     for( const pat::Jet &j : *jets ) {
+
+       bool hasLargeMuonFraction = false;
+       bool hasLargeEMFraction = false;
+       bool hasSmallNeutralMultiplicity = false;
+
+       if( j.neutralEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
+       if( j.muonEnergyFraction() >= 0.8 ) hasLargeMuonFraction = true;
+       if( fabs(j.eta()) < 2.4 ) {
+          if( j.chargedEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
+       }
+
+       if( j.pt() < 10. ) continue;
+       if( hasSmallNeutralMultiplicity || hasLargeMuonFraction || hasLargeEMFraction ) continue;
+
+       //fill the all jets branches:
+       allJet_eta->push_back( j.eta() );
+       allJet_phi->push_back( j.phi() );
+       allJet_pt->push_back( j.pt() );
+       allJet_nhef->push_back( j.neutralHadronEnergyFraction() );
+       allJet_neef->push_back( j.neutralEMEnergyFraction() );
+       allJet_chef->push_back( j.chargedHadronEnergyFraction() );
+       allJet_ceef->push_back( j.chargedEMEnergyFraction() );
+
+     }
+     //HC
+
    for( const pat::Jet &j : *jets ) {
 
      bool hasLargeMuonFraction = false;
