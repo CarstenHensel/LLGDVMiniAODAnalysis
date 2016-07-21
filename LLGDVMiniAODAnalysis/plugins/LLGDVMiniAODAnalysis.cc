@@ -1010,9 +1010,9 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
        allJet_phi->push_back( j.phi() );
        allJet_pt->push_back( j.pt() );
        allJet_nhef->push_back( j.neutralHadronEnergyFraction() );
-       allJet_neef->push_back( j.neutralEMEnergyFraction() );
+       allJet_neef->push_back( j.neutralEmEnergyFraction() );
        allJet_chef->push_back( j.chargedHadronEnergyFraction() );
-       allJet_ceef->push_back( j.chargedEMEnergyFraction() );
+       allJet_ceef->push_back( j.chargedEmEnergyFraction() );
        allJet_nconst->push_back( j.numberOfDaughters() );
        allJet_mufrac->push_back( j.muonEnergyFraction() );
        allJet_cmult->push_back( j.chargedMultiplicity() );
