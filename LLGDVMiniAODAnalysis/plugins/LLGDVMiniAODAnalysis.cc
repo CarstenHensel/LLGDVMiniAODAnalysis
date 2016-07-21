@@ -992,19 +992,8 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
      //CH
      for( const pat::Jet &j : *jets ) {
 
-       bool hasLargeMuonFraction = false;
-       bool hasLargeEMFraction = false;
-       bool hasSmallNeutralMultiplicity = false;
-
-       if( j.neutralEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
-       if( j.muonEnergyFraction() >= 0.8 ) hasLargeMuonFraction = true;
-       if( fabs(j.eta()) < 2.4 ) {
-          if( j.chargedEmEnergyFraction() >= 0.9 ) hasLargeEMFraction = true;
-       }
-
        if( j.pt() < 10. ) continue;
-       // if( hasSmallNeutralMultiplicity || hasLargeMuonFraction || hasLargeEMFraction ) continue;
-
+       
        //fill the all jets branches:
        allJet_eta->push_back( j.eta() );
        allJet_phi->push_back( j.phi() );
