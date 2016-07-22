@@ -1534,7 +1534,7 @@ LLGDVMiniAODAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& i
    const pat::MET &themet = mets->front();
    //met->push_back( themet.corPt(pat::MET::METCorrectionLevel::Type01) );
    double tmp_px = themet.corPx(pat::MET::METCorrectionLevel::Type01);
-   double tmp py = themet.corPy(pat::MET::METCorrectionLevel::Type01);
+   double tmp_py = themet.corPy(pat::MET::METCorrectionLevel::Type01);
    met_x->push_back( tmp_px );
    met_y->push_back( tmp_py );
    met->push_back( sqrt(tmp_px * tmp_px + tmp_py * tmp_py) );
